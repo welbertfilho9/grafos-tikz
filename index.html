@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<!-- Google Analytics: substitua G-XXXXXXXXXX pelo seu Measurement ID -->
+<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXXXX');
+</script> -->
+
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='8' cy='8' r='5' fill='%233b33b0'/><circle cx='24' cy='8' r='5' fill='%233b33b0'/><circle cx='16' cy='24' r='5' fill='%233b33b0'/><line x1='8' y1='8' x2='24' y2='8' stroke='%233b33b0' stroke-width='2.5'/><line x1='8' y1='8' x2='16' y2='24' stroke='%233b33b0' stroke-width='2.5'/><line x1='24' y1='8' x2='16' y2='24' stroke='%233b33b0' stroke-width='2.5'/></svg>">
+
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Editor visual de grafos com exportação automática de código TikZ para LaTeX. Criado durante pesquisa em Teoria Topológica de Grafos na UFABC.">
+<meta name="author" content="Welbert da Silva Freitas Filho">
+<meta name="keywords" content="grafos, TikZ, LaTeX, teoria dos grafos, UFABC, editor visual">
+<meta property="og:title" content="Gerador de Grafos em TikZ">
+<meta property="og:description" content="Desenhe grafos visualmente e exporte código TikZ pronto para o Overleaf.">
+<meta property="og:url" content="https://grafoslatex.netlify.app">
+<meta property="og:type" content="website">
+<title>Gerador de Grafos em TikZ</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f4f0;--surface:#fff;--surface2:#f0efe9;--surface3:#e8e7e0;
+  --border:rgba(0,0,0,0.09);--border2:rgba(0,0,0,0.16);
+  --text:#1a1918;--text2:#65625c;--text3:#9a9790;
+  --accent:#3b33b0;--accent2:#5a53d4;--accent-bg:rgba(59,51,176,0.08);--accent-border:rgba(59,51,176,0.28);
+  --green:#0b6e4f;--green-bg:rgba(11,110,79,0.07);--green-border:rgba(11,110,79,0.27);
+  --orange:#b85c00;--orange-bg:rgba(184,92,0,0.08);--orange-border:rgba(184,92,0,0.28);
+  --red:#942828;--red-bg:rgba(148,40,40,0.07);--red-border:rgba(148,40,40,0.25);
+  --purple:#6b35b0;--purple-bg:rgba(107,53,176,0.08);--purple-border:rgba(107,53,176,0.28);
+  --teal:#0e7490;--teal-bg:rgba(14,116,144,0.08);--teal-border:rgba(14,116,144,0.28);
+  --sel:#3b33b0;--multi:#d97706;--multi-bg:rgba(217,119,6,0.12);
+  --font-ui:'Inter',sans-serif;--font-mono:'JetBrains Mono',monospace;
+  --r:7px;--rs:5px;--shadow:0 2px 14px rgba(0,0,0,0.11);
+}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;user-select:none}
+
+/* ── TOPBAR ── */
+#topbar{display:flex;align-items:center;gap:4px;padding:5px 10px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;min-height:42px}
+.bar-brand{font-family:var(--font-mono);font-size:11.5px;font-weight:500;color:var(--text2);letter-spacing:.05em;margin-right:4px;white-space:nowrap}
+.bar-brand em{color:var(--accent);font-style:normal}
+.bar-brand small{font-size:9px;background:var(--accent);color:#fff;padding:1px 5px;border-radius:10px;margin-left:3px;vertical-align:middle}
+.vsep{width:1px;height:20px;background:var(--border2);margin:0 3px;flex-shrink:0}
+.btn{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border:1px solid var(--border2);border-radius:var(--rs);background:transparent;cursor:pointer;font-family:var(--font-ui);font-size:11.5px;color:var(--text);white-space:nowrap;transition:background .1s,border-color .1s,color .1s;line-height:1;height:27px}
+.btn:hover{background:var(--surface2)}
+.btn.active{background:var(--text);color:#fff;border-color:var(--text)}
+.btn.active:hover{background:#2d2d2d}
+.btn.gen{border-color:var(--accent-border);color:var(--accent);background:var(--accent-bg)}
+.btn.gen:hover{background:rgba(59,51,176,0.15)}
+.btn.op{border-color:var(--purple-border);color:var(--purple);background:var(--purple-bg)}
+.btn.op:hover{background:rgba(107,53,176,0.15)}
+.btn.analyze{border-color:var(--teal-border);color:var(--teal);background:var(--teal-bg)}
+.btn.analyze:hover{background:rgba(14,116,144,0.15)}
+.btn.danger{border-color:var(--red-border);color:var(--red)}
+.btn.danger:hover{background:var(--red-bg)}
+.btn.act{border-color:var(--orange-border);color:var(--orange);background:var(--orange-bg)}
+.btn.act:hover{background:rgba(184,92,0,0.14)}
+.btn.toggle-sb{border-color:var(--border2);color:var(--text2);padding:4px 7px;font-size:13px}
+.btn sub,.btn sup{font-size:8px}
+
+/* ── TOOLBAR2 ── */
+#toolbar2{display:flex;align-items:center;gap:5px;padding:4px 10px;background:var(--surface2);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.tb2-label{font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-right:2px;white-space:nowrap}
+.scale-row{display:flex;align-items:center;gap:5px}
+.scale-row input[type=range]{width:80px;accent-color:var(--accent);cursor:pointer}
+.scale-row span{font-family:var(--font-mono);font-size:11px;color:var(--accent);min-width:30px;text-align:right}
+.icon-btn{width:25px;height:25px;border:1px solid var(--border2);border-radius:var(--rs);background:transparent;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:background .1s;color:var(--text)}
+.icon-btn:hover{background:var(--surface3)}
+.icon-btn.active{background:var(--text);color:#fff;border-color:var(--text)}
+#zoom-label{font-family:var(--font-mono);font-size:10px;color:var(--accent);min-width:36px;text-align:center;cursor:pointer;padding:3px 5px;border:1px solid var(--border2);border-radius:var(--rs)}
+#zoom-label:hover{background:var(--surface3)}
+
+/* ── MAIN ── */
+#main{display:flex;flex:1;overflow:hidden}
+
+/* ── SIDEBAR ── */
+#sidebar{width:210px;min-width:210px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:10px;flex-shrink:0;transition:width .2s,min-width .2s,padding .2s,opacity .2s}
+#sidebar.collapsed{width:0;min-width:0;padding:0;opacity:0;overflow:hidden}
+.sec-label{font-size:9px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--text3);margin-bottom:5px;padding-bottom:3px;border-bottom:1px solid var(--border)}
+.prop{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.prop label{font-size:11px;color:var(--text2);min-width:56px;flex-shrink:0}
+.prop input[type=text],.prop input[type=number],.prop select{flex:1;font-size:11.5px;font-family:var(--font-ui);padding:3px 7px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--surface2);color:var(--text);outline:none;min-width:0}
+.prop input[type=text]:focus,.prop input[type=number]:focus,.prop select:focus{border-color:var(--accent);background:#fff}
+.prop input[type=color]{width:27px;height:23px;border:1px solid var(--border2);border-radius:var(--rs);padding:2px;cursor:pointer;background:var(--surface2)}
+.prop input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:var(--accent)}
+.prop input[type=range]{flex:1;accent-color:var(--accent);cursor:pointer}
+.prop .vb{font-family:var(--font-mono);font-size:10px;color:var(--accent);min-width:24px;text-align:right}
+.hint{font-size:10.5px;color:var(--text3);line-height:1.7}
+.hint strong{color:var(--text2);font-weight:500}
+.hint p{margin-bottom:3px}
+.kbd{display:inline-block;background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:0 4px;font-family:var(--font-mono);font-size:9px;color:var(--text2);vertical-align:middle}
+.stats-row{display:flex;gap:5px;flex-wrap:wrap}
+.stat-card{flex:1;min-width:45px;background:var(--surface2);border-radius:var(--rs);padding:5px 6px;text-align:center;border:1px solid var(--border)}
+.stat-card .sv{font-size:16px;font-weight:700;color:var(--accent);line-height:1}
+.stat-card .sl{font-size:9px;color:var(--text3);margin-top:1px}
+.multi-info{background:var(--multi-bg);border:1px solid rgba(217,119,6,0.3);border-radius:var(--rs);padding:6px 8px;font-size:11px;color:var(--orange)}
+.sb-btn{width:100%;padding:5px;border:1px solid var(--border2);border-radius:var(--rs);background:transparent;cursor:pointer;font-size:11px;font-family:var(--font-ui);color:var(--text);margin-bottom:4px;transition:background .1s;text-align:left;display:flex;align-items:center;gap:5px}
+.sb-btn:hover{background:var(--surface2)}
+.sb-btn.red{color:var(--red);border-color:var(--red-border)}
+.sb-btn.red:hover{background:var(--red-bg)}
+
+/* ── CANVAS ── */
+#canvas-area{flex:1;position:relative;overflow:hidden;background:#f9f8f4}
+#canvas-area svg{width:100%;height:100%;display:block}
+#sel-rect{position:absolute;border:1.5px dashed var(--accent);background:rgba(59,51,176,0.06);pointer-events:none;display:none;border-radius:2px}
+
+/* ── ANALYSIS PANEL ── */
+#analysis-panel{position:absolute;top:10px;right:10px;width:240px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);box-shadow:var(--shadow);padding:12px;display:none;z-index:200;max-height:calc(100% - 20px);overflow-y:auto}
+#analysis-panel.open{display:block}
+#analysis-panel h4{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.close-panel{float:right;background:none;border:none;cursor:pointer;font-size:14px;color:var(--text3);margin-top:-2px}
+.close-panel:hover{color:var(--text)}
+.analysis-section{margin-bottom:10px}
+.analysis-section h5{font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+.prop-line{display:flex;justify-content:space-between;align-items:baseline;padding:2px 0;border-bottom:1px solid var(--border);font-size:11px}
+.prop-line span:first-child{color:var(--text2)}
+.prop-line span:last-child{font-family:var(--font-mono);font-size:11px;color:var(--text);font-weight:500}
+.highlight-badge{display:inline-block;padding:1px 6px;border-radius:10px;font-size:10px;font-weight:500;margin:2px 2px 2px 0}
+.hb-cut{background:rgba(148,40,40,0.12);color:var(--red);border:1px solid var(--red-border)}
+.hb-bridge{background:rgba(184,92,0,0.12);color:var(--orange);border:1px solid var(--orange-border)}
+.hb-block{background:rgba(59,51,176,0.10);color:var(--accent);border:1px solid var(--accent-border)}
+.hb-max{background:rgba(11,110,79,0.10);color:var(--green);border:1px solid var(--green-border)}
+.hb-min{background:rgba(14,116,144,0.10);color:var(--teal);border:1px solid var(--teal-border)}
+.hb-euler{background:rgba(107,53,176,0.10);color:var(--purple);border:1px solid var(--purple-border)}
+.prop-tags{display:flex;flex-wrap:wrap;gap:2px;margin-top:3px}
+.prop-bool{font-weight:500}
+.prop-bool.yes{color:var(--green)}
+.prop-bool.no{color:var(--red)}
+.prop-bool.maybe{color:var(--orange)}
+.legend-row{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text2);margin-bottom:4px}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ── TIKZ PANEL ── */
+#tikz-panel{width:275px;min-width:275px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;padding:10px;gap:6px;flex-shrink:0}
+.panel-title{font-size:9px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--text3);padding-bottom:5px;border-bottom:1px solid var(--border)}
+.tf{display:flex;flex-direction:column;gap:3px}
+.tf label{font-size:10.5px;color:var(--text2)}
+.tf input,.tf select{font-size:11.5px;font-family:var(--font-ui);padding:4px 8px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--surface2);color:var(--text);outline:none}
+.tf input:focus,.tf select:focus{border-color:var(--accent);background:#fff}
+.tikz-row{display:flex;gap:5px}
+.tikz-row .tf{flex:1}
+#tikz-code{flex:1;font-family:var(--font-mono);font-size:10px;line-height:1.65;padding:9px;border:1px solid var(--border2);border-radius:var(--r);background:#f7f6f2;color:var(--text);resize:none;outline:none;min-height:0}
+.copy-btn{padding:7px;border:1px solid var(--border2);border-radius:var(--rs);background:transparent;cursor:pointer;font-family:var(--font-ui);font-size:11.5px;font-weight:500;color:var(--text);width:100%;transition:all .1s}
+.copy-btn:hover{background:var(--surface2)}
+.copy-btn.copied{background:var(--text);color:#fff;border-color:var(--text)}
+.btn-row{display:flex;gap:5px}
+.btn-row .copy-btn{flex:1}
+
+/* ── STATUS ── */
+#statusbar{padding:3px 10px;background:var(--surface);border-top:1px solid var(--border);font-size:10.5px;color:var(--text3);flex-shrink:0;font-family:var(--font-mono);min-height:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── MODAL ── */
+#modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.38);align-items:center;justify-content:center;z-index:1000}
+#modal-bg.open{display:flex}
+#modal{background:var(--surface);border-radius:10px;padding:20px;min-width:260px;max-width:400px;box-shadow:var(--shadow);border:1px solid var(--border2)}
+#modal h3{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text)}
+.mf{display:flex;flex-direction:column;gap:4px;margin-bottom:9px}
+.mf label{font-size:11.5px;color:var(--text2)}
+.mf input,.mf select,.mf textarea{font-size:12.5px;padding:6px 9px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--surface2);color:var(--text);outline:none;font-family:var(--font-ui)}
+.mf input:focus,.mf select:focus,.mf textarea:focus{border-color:var(--accent);background:#fff}
+.mf textarea{resize:vertical;min-height:80px;font-family:var(--font-mono);font-size:11px}
+.mf .note{font-size:11px;color:var(--text3);line-height:1.5;background:var(--surface2);padding:7px 9px;border-radius:var(--rs);border:1px solid var(--border)}
+.ma{display:flex;justify-content:flex-end;gap:7px;margin-top:6px}
+.ma button{padding:6px 15px;border-radius:var(--rs);border:1px solid var(--border2);background:transparent;cursor:pointer;font-size:12px;font-family:var(--font-ui);color:var(--text);transition:background .1s}
+.ma button:hover{background:var(--surface2)}
+.ma button.primary{background:var(--text);color:#fff;border-color:var(--text)}
+.ma button.primary:hover{background:#2d2d2d}
+
+/* ── CONTEXT MENU ── */
+#ctx-menu{display:none;position:fixed;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);box-shadow:var(--shadow);z-index:500;min-width:165px;padding:4px 0;font-size:12px}
+#ctx-menu.open{display:block}
+.ctx-item{padding:6px 13px;cursor:pointer;color:var(--text);display:flex;align-items:center;gap:8px;transition:background .08s}
+.ctx-item:hover{background:var(--surface2)}
+.ctx-item.red{color:var(--red)}
+.ctx-item.red:hover{background:var(--red-bg)}
+.ctx-sep{height:1px;background:var(--border);margin:3px 0}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1918ee;color:#fff;padding:7px 16px;border-radius:20px;font-size:11.5px;opacity:0;pointer-events:none;transition:all .22s;z-index:2000;font-family:var(--font-mono);backdrop-filter:blur(4px)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.42);align-items:center;justify-content:center;z-index:2000}
+.modal-overlay.open{display:flex}
+/* drag-over highlight */
+#canvas-area.dragover{outline:3px dashed var(--accent);outline-offset:-4px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:700px){
+  #tikz-panel{display:none}
+  #toolbar2 .tb2-label{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <button class="btn toggle-sb" onclick="toggleSidebar()" title="Ocultar/mostrar painel lateral">☰</button>
+  <div class="bar-brand">Gerador de <em>Grafos</em> em TikZ</div>
+  <div class="vsep"></div>
+  <button class="btn active" id="tool-move"      onclick="setTool('move')"     title="Mover canvas e objetos (F1)">✥ Mover</button>
+  <button class="btn"        id="tool-select"    onclick="setTool('select')"   title="Selecionar objeto (F2)">⊙ Selecionar</button>
+  <button class="btn"        id="tool-multi"     onclick="setTool('multi')"    title="Selecionar múltiplos (M)">⬚ Multi-sel.</button>
+  <button class="btn"        id="tool-vertex"    onclick="setTool('vertex')"   title="Adicionar vértice (V)">● Vértice</button>
+  <button class="btn"        id="tool-edge"      onclick="setTool('edge')"     title="Adicionar aresta (A)">— Aresta</button>
+  <button class="btn"        id="tool-loop"      onclick="setTool('loop')"     title="Adicionar laço (L)">↺ Laço</button>
+  <button class="btn"        id="tool-subdivide" onclick="setTool('subdivide')" title="Subdividir aresta (D)">⊕ Subdiv.</button>
+  <button class="btn"        id="tool-delete"    onclick="setTool('delete')"   title="Deletar (X)">✕ Del.</button>
+  <div class="vsep"></div>
+  <button class="btn gen" onclick="openModal('Kn')">K<sub>n</sub></button>
+  <button class="btn gen" onclick="openModal('Cn')">C<sub>n</sub></button>
+  <button class="btn gen" onclick="openModal('Pn')">P<sub>n</sub></button>
+  <button class="btn gen" onclick="openModal('Kmn')">K<sub>m,n</sub></button>
+  <button class="btn gen" onclick="openModal('Bn')">B<sub>n</sub></button>
+  <button class="btn gen" onclick="openModal('Wn')">W<sub>n</sub></button>
+  <button class="btn gen" onclick="openModal('Qn')">Q<sub>n</sub></button>
+  <div class="vsep"></div>
+  <button class="btn op" onclick="doComplement()">Ḡ Compl.</button>
+  <button class="btn op" onclick="openModal('product')">□ Prod. Cart.</button>
+  <div class="vsep"></div>
+  <button class="btn analyze" onclick="toggleAnalysis()">🔬 Analisar</button>
+  <div class="vsep"></div>
+  <button class="btn act" onclick="autoLayout()">⟳ Layout</button>
+  <button class="btn act" onclick="openModal('save')">💾 Salvar</button>
+  <button class="btn act" onclick="openModal('load')">📂 Carregar</button>
+  <button class="btn danger" onclick="confirmClear()">✕ Limpar</button>
+  <button class="btn" onclick="openHelp()" style="border-color:var(--teal-border);color:var(--teal);background:var(--teal-bg)">? Ajuda</button>
+</div>
+
+<!-- TOOLBAR2 -->
+<div id="toolbar2">
+  <span class="tb2-label">Escala TikZ</span>
+  <div class="scale-row">
+    <input type="range" id="tikz-scale" min="1" max="9" step="0.1" value="3.6" oninput="updateScaleDisplay()">
+    <span id="scale-val">3.6</span>
+  </div>
+  <div class="vsep"></div>
+  <span class="tb2-label">Arestas</span>
+  <div class="scale-row">
+    <input type="range" id="edge-thickness" min="0.5" max="6" step="0.5" value="1.8" oninput="renderAll()">
+    <span id="thick-val">1.8</span>
+  </div>
+  <div class="vsep"></div>
+  <span class="tb2-label">Raio padrão</span>
+  <div class="scale-row">
+    <input type="range" id="default-node-r" min="8" max="45" step="1" value="20" oninput="updateNR()">
+    <span id="node-r-val">20</span>
+  </div>
+  <div class="vsep"></div>
+  <span class="tb2-label">Grade</span>
+  <button class="icon-btn active" id="grid-btn" onclick="toggleGrid()" title="Grade (G)">⊞</button>
+  <button class="icon-btn" id="snap-btn" onclick="toggleSnap()" title="Snap">⊙</button>
+  <div class="vsep"></div>
+  <button class="icon-btn" onclick="undo()" title="Desfazer Ctrl+Z">↩</button>
+  <button class="icon-btn" onclick="redo()" title="Refazer Ctrl+Y">↪</button>
+  <div class="vsep"></div>
+  <button class="icon-btn" onclick="zoomCanvas(-0.15)">−</button>
+  <div id="zoom-label" onclick="zoomCanvas(0)" title="Reset zoom">100%</div>
+  <button class="icon-btn" onclick="zoomCanvas(+0.15)">+</button>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div id="sidebar-content"></div>
+    <div style="margin-top:auto">
+      <div class="sec-label">Grafo</div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="sv" id="stat-v">0</div><div class="sl">V</div></div>
+        <div class="stat-card"><div class="sv" id="stat-e">0</div><div class="sl">E</div></div>
+        <div class="stat-card"><div class="sv" id="stat-c">—</div><div class="sl">Comp.</div></div>
+        <div class="stat-card"><div class="sv" id="stat-s">—</div><div class="sl">Sel.</div></div>
+      </div>
+      <div style="margin-top:8px">
+        <div class="sec-label">Atalhos</div>
+        <div class="hint" style="font-size:9.5px;line-height:1.8">
+          <span class="kbd">S</span> Sel · <span class="kbd">M</span> Multi · <span class="kbd">V</span> Vért.<br>
+          <span class="kbd">A</span> Aresta · <span class="kbd">L</span> Laço · <span class="kbd">D</span> Subdi.<br>
+          <span class="kbd">X</span> Del · <span class="kbd">Del</span> Remover sel.<br>
+          <span class="kbd">Ctrl+A</span> Sel. tudo · <span class="kbd">Esc</span> Dessel.<br>
+          <span class="kbd">Ctrl+Z/Y</span> Undo/Redo<br>
+          <span class="kbd">Scroll</span> Zoom · <span class="kbd">Alt+drag</span> Pan
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CANVAS -->
+  <div id="canvas-area">
+    <svg id="svg"
+      onmousedown="svgMD(event)"
+      onmousemove="svgMM(event)"
+      onmouseup="svgMU(event)"
+      onmouseleave="svgMU(event)"
+      onwheel="svgWheel(event)"
+      oncontextmenu="svgCtx(event)">
+      <defs>
+        <marker id="arr"       markerWidth="9" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#49463e"/></marker>
+        <marker id="arr-sel"   markerWidth="9" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3b33b0"/></marker>
+        <marker id="arr-multi" markerWidth="9" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#d97706"/></marker>
+        <filter id="fsm"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.10"/></filter>
+      </defs>
+      <g id="transform-group">
+        <g id="grid-layer"></g>
+        <g id="edge-layer"></g>
+        <g id="vertex-layer"></g>
+        <g id="temp-layer"></g>
+      </g>
+    </svg>
+    <div id="sel-rect"></div>
+
+    <!-- Analysis Panel (floating) -->
+    <div id="analysis-panel">
+      <button class="close-panel" onclick="toggleAnalysis()">✕</button>
+      <h4>Análise do Grafo</h4>
+      <div id="analysis-content"><em style="font-size:11px;color:var(--text3)">Clique em "Analisar" para calcular.</em></div>
+    </div>
+  </div>
+
+  <!-- TIKZ PANEL -->
+  <div id="tikz-panel">
+    <div class="panel-title">Exportar TikZ</div>
+    <div class="tf"><label>Caption</label><input type="text" id="input-caption" placeholder="Grafo de exemplo." oninput="updateTikz()"></div>
+    <div class="tikz-row">
+      <div class="tf"><label>Label</label><input type="text" id="input-label" value="fig:grafo" oninput="updateTikz()"></div>
+      <div class="tf" style="width:70px"><label>Pos.</label>
+        <select id="fig-pos" onchange="updateTikz()">
+          <option>H</option><option>h</option><option>t</option><option>b</option><option>p</option>
+        </select>
+      </div>
+    </div>
+    <div class="tf"><label>Estilo nós</label>
+      <select id="node-style" onchange="updateTikz()">
+        <option value="default">Padrão (fill=black!10)</option>
+        <option value="filled">Preenchido (black!25)</option>
+        <option value="white">Branco (fill=white)</option>
+        <option value="minimal">Mínimo (draw only)</option>
+        <option value="point">Ponto (4pt, solid)</option>
+      </select>
+    </div>
+    <textarea id="tikz-code" readonly spellcheck="false"></textarea>
+    <div class="btn-row">
+      <button class="copy-btn" id="copy-btn" onclick="copyTikz()">📋 Copiar</button>
+      <button class="copy-btn" onclick="downloadTikz()">⬇ .tex</button>
+    </div>
+  </div>
+</div>
+
+<!-- STATUSBAR -->
+<div id="statusbar">Pronto.</div>
+
+<!-- CONTEXT MENU -->
+<div id="ctx-menu">
+  <div class="ctx-item" onclick="ctxAction('label')">✏ Renomear</div>
+  <div class="ctx-item" onclick="ctxAction('color')">🎨 Cor de destaque</div>
+  <div class="ctx-item" onclick="ctxAction('dup')">⧉ Duplicar</div>
+  <div class="ctx-item" id="ctx-conn" onclick="ctxAction('conn')">⊕ Conectar a todos</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item red" onclick="ctxAction('del')">✕ Deletar</div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-bg" onclick="closeModal(event)">
+  <div id="modal">
+    <h3 id="modal-title">Gerar</h3>
+    <div id="modal-fields"></div>
+    <div class="ma">
+      <button onclick="document.getElementById('modal-bg').classList.remove('open')">Cancelar</button>
+      <button class="primary" onclick="confirmModal()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+'use strict';
+// ══════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════
+let verts=[], edges=[];
+let tool='select';
+let selected=null;
+let multiSel=new Set();
+let dragging=null, dragOffset={x:0,y:0}, dragGroup=[];
+let edgeStart=null;
+let mousePos={x:0,y:0};
+let modalType=null;
+let ctxTarget=null;
+let showGrid=true, snapGrid=false, snapSize=20;
+let zoomLevel=1, panX=0, panY=0;
+let isPanning=false, panStart={x:0,y:0};
+let selBoxStart=null;
+let history=[], historyIdx=-1;
+let defaultNodeR=20;
+let sidebarOpen=true;
+// analysis highlight sets
+let highlightCuts=new Set(), highlightBridges=new Set(), highlightBlocks=[];
+
+const SVG=document.getElementById('svg');
+const TG=document.getElementById('transform-group');
+function CW(){return SVG.clientWidth||900}
+function CH(){return SVG.clientHeight||540}
+function uid(){return 'n'+Math.random().toString(36).slice(2,9)}
+function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v))}
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function NR(v){return v?(v.radius||defaultNodeR):defaultNodeR}
+
+// ══════════════════════════════════════════════════════
+//  VIEWPORT
+// ══════════════════════════════════════════════════════
+function initVB(){SVG.setAttribute('viewBox',`0 0 ${CW()} ${CH()}`)}
+
+function svgPos(e){
+  const r=SVG.getBoundingClientRect();
+  const vb=SVG.viewBox.baseVal;
+  const scX=(vb.width||CW())/r.width, scY=(vb.height||CH())/r.height;
+  const raw={x:(e.clientX-r.left)*scX, y:(e.clientY-r.top)*scY};
+  return {x:(raw.x-panX)/zoomLevel, y:(raw.y-panY)/zoomLevel};
+}
+
+function snap(v){return snapGrid?Math.round(v/snapSize)*snapSize:v}
+
+function toTikz(x,y){
+  const sc=parseFloat(document.getElementById('tikz-scale').value)*0.01;
+  return [(x*sc).toFixed(2),((CH()-y)*sc).toFixed(2)];
+}
+
+// ══════════════════════════════════════════════════════
+//  HISTORY
+// ══════════════════════════════════════════════════════
+function saveHistory(){
+  const st=JSON.stringify({verts,edges});
+  if(historyIdx<history.length-1) history=history.slice(0,historyIdx+1);
+  history.push(st);
+  if(history.length>80) history.shift();
+  historyIdx=history.length-1;
+}
+function undo(){
+  if(historyIdx<=0){toast('Nada para desfazer');return}
+  historyIdx--;
+  const s=JSON.parse(history[historyIdx]);
+  verts=s.verts;edges=s.edges;selected=null;multiSel=new Set();clearHighlights();renderAll();toast('↩ Desfeito');
+}
+function redo(){
+  if(historyIdx>=history.length-1){toast('Nada para refazer');return}
+  historyIdx++;
+  const s=JSON.parse(history[historyIdx]);
+  verts=s.verts;edges=s.edges;selected=null;multiSel=new Set();clearHighlights();renderAll();toast('↪ Refeito');
+}
+function clearHighlights(){highlightCuts=new Set();highlightBridges=new Set();highlightBlocks=[]}
+
+// ══════════════════════════════════════════════════════
+//  TOOL
+// ══════════════════════════════════════════════════════
+function toolCursor(t){
+  return {move:'grab',select:'default',multi:'crosshair',vertex:'crosshair',edge:'cell',loop:'cell',subdivide:'copy',delete:'not-allowed'}[t]||'default';
+}
+function setTool(t){
+  tool=t;edgeStart=null;
+  document.querySelectorAll('.btn[id^="tool-"]').forEach(b=>b.classList.remove('active'));
+  const b=document.getElementById('tool-'+t);if(b)b.classList.add('active');
+  SVG.style.cursor=toolCursor(t);
+  if(t!=='multi'&&t!=='select'&&t!=='move'){multiSel.clear();selected=null;}
+  const msgs={
+    move:'Clique e arraste para mover o canvas · Clique num vértice/aresta para selecioná-lo',
+    select:'Clique para selecionar · Arraste para mover · Clique direito = menu',
+    multi:'Arraste para caixa de seleção · Shift+clique para adicionar · Ctrl+A para todos',
+    vertex:'Clique na tela para adicionar um vértice',
+    edge:'Clique no vértice de ORIGEM (depois no DESTINO)',
+    loop:'Clique em um vértice para adicionar laço',
+    subdivide:'Clique em uma aresta para inserir vértice de grau 2 no meio',
+    delete:'Clique em vértice ou aresta para deletar'
+  };
+  setStatus(msgs[t]||'');renderAll();
+}
+
+// ══════════════════════════════════════════════════════
+//  SIDEBAR TOGGLE
+// ══════════════════════════════════════════════════════
+function toggleSidebar(){
+  sidebarOpen=!sidebarOpen;
+  document.getElementById('sidebar').classList.toggle('collapsed',!sidebarOpen);
+}
+
+// ══════════════════════════════════════════════════════
+//  ZOOM / PAN
+// ══════════════════════════════════════════════════════
+function zoomCanvas(delta){
+  if(delta===0){zoomLevel=1;panX=0;panY=0;document.getElementById('zoom-label').textContent='100%';renderAll();return}
+  const prev=zoomLevel;
+  zoomLevel=clamp(zoomLevel+delta,0.15,6);
+  const cx=CW()/2,cy=CH()/2;
+  panX=cx-(cx-panX)*(zoomLevel/prev);
+  panY=cy-(cy-panY)*(zoomLevel/prev);
+  document.getElementById('zoom-label').textContent=Math.round(zoomLevel*100)+'%';
+  renderAll();
+}
+function svgWheel(e){
+  e.preventDefault();
+  const delta=e.deltaY<0?0.13:-0.13;
+  const r=SVG.getBoundingClientRect();
+  const px=(e.clientX-r.left),py=(e.clientY-r.top);
+  const prev=zoomLevel;
+  zoomLevel=clamp(zoomLevel+delta,0.15,6);
+  panX=px-(px-panX)*(zoomLevel/prev);
+  panY=py-(py-panY)*(zoomLevel/prev);
+  document.getElementById('zoom-label').textContent=Math.round(zoomLevel*100)+'%';
+  renderAll();
+}
+function applyTransform(){TG.setAttribute('transform',`translate(${panX},${panY}) scale(${zoomLevel})`)}
+
+// ══════════════════════════════════════════════════════
+//  GRID
+// ══════════════════════════════════════════════════════
+function toggleGrid(){showGrid=!showGrid;document.getElementById('grid-btn').classList.toggle('active',showGrid);renderAll()}
+function toggleSnap(){snapGrid=!snapGrid;document.getElementById('snap-btn').classList.toggle('active',snapGrid);toast(snapGrid?'Snap ativado':'Snap desativado')}
+function renderGrid(){
+  const g=document.getElementById('grid-layer');
+  if(!showGrid){g.innerHTML='';return}
+  const W=CW()/zoomLevel+snapSize*2,H=CH()/zoomLevel+snapSize*2;
+  const ox=-panX/zoomLevel,oy=-panY/zoomLevel;
+  let html='';
+  for(let x=Math.floor(ox/snapSize)*snapSize;x<ox+W;x+=snapSize)
+    html+=`<line x1="${x}" y1="${oy}" x2="${x}" y2="${oy+H}" stroke="rgba(0,0,0,0.05)" stroke-width="${0.5/zoomLevel}"/>`;
+  for(let y=Math.floor(oy/snapSize)*snapSize;y<oy+H;y+=snapSize)
+    html+=`<line x1="${ox}" y1="${y}" x2="${ox+W}" y2="${y}" stroke="rgba(0,0,0,0.05)" stroke-width="${0.5/zoomLevel}"/>`;
+  g.innerHTML=html;
+}
+
+// ══════════════════════════════════════════════════════
+//  GEOMETRY
+// ══════════════════════════════════════════════════════
+function circleLayout(n,cx,cy,r){
+  return Array.from({length:n},(_,i)=>{
+    const a=(2*Math.PI*i/n)-Math.PI/2;
+    return {x:Math.round(cx+r*Math.cos(a)),y:Math.round(cy+r*Math.sin(a))};
+  });
+}
+
+function getEdgePath(v1,v2,edge){
+  const r1=NR(v1),r2=NR(v2);
+  if(edge.isLoop){
+    const ang=((edge.loopDir||0)*Math.PI/180);
+    const rs=r1+10;
+    return `M ${v1.x} ${v1.y} C ${v1.x+Math.cos(ang-0.85)*rs*2.8} ${v1.y+Math.sin(ang-0.85)*rs*2.8} ${v1.x+Math.cos(ang+0.85)*rs*2.8} ${v1.y+Math.sin(ang+0.85)*rs*2.8} ${v1.x} ${v1.y}`;
+  }
+  const dx=v2.x-v1.x,dy=v2.y-v1.y,len=Math.sqrt(dx*dx+dy*dy)||1;
+  const nx=-dy/len,ny=dx/len;
+  const parallels=edges.filter(e=>(e.from===edge.from&&e.to===edge.to)||(e.from===edge.to&&e.to===edge.from));
+  const idx=parallels.findIndex(e=>e.id===edge.id);
+  const count=parallels.length;
+  let bend=edge.bend||0;
+  if(count>1)bend=(idx-(count-1)/2)*65;
+  const sx=v1.x+(dx/len)*r1,sy=v1.y+(dy/len)*r1;
+  const ex=v2.x-(dx/len)*r2,ey=v2.y-(dy/len)*r2;
+  if(bend===0&&!edge.curved)return`M ${sx} ${sy} L ${ex} ${ey}`;
+  const m=bend||(edge.curved?40:0);
+  return`M ${sx} ${sy} Q ${(sx+ex)/2+nx*m} ${(sy+ey)/2+ny*m} ${ex} ${ey}`;
+}
+
+function getEdgeMid(v1,v2,edge){
+  if(edge.isLoop){const ang=((edge.loopDir||0)*Math.PI/180);const rs=NR(v1)+10;return{x:v1.x+Math.cos(ang)*rs*2.9,y:v1.y+Math.sin(ang)*rs*2.9}}
+  const dx=v2.x-v1.x,dy=v2.y-v1.y,len=Math.sqrt(dx*dx+dy*dy)||1;
+  const nx=-dy/len,ny=dx/len;
+  const parallels=edges.filter(e=>(e.from===edge.from&&e.to===edge.to)||(e.from===edge.to&&e.to===edge.from));
+  const idx=parallels.findIndex(e=>e.id===edge.id);
+  const count=parallels.length;
+  let bend=edge.bend||0;if(count>1)bend=(idx-(count-1)/2)*65;
+  const m=bend||(edge.curved?40:0);
+  return{x:(v1.x+v2.x)/2+nx*m*0.62,y:(v1.y+v2.y)/2+ny*m*0.62};
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════════════
+function renderAll(){
+  applyTransform();renderGrid();renderEdges();renderVertices();
+  updateStats();updateSidebar();updateTikz();
+}
+
+function edgeTh(){
+  const v=parseFloat(document.getElementById('edge-thickness').value);
+  document.getElementById('thick-val').textContent=v.toFixed(1);
+  return v;
+}
+
+function renderEdges(){
+  const g=document.getElementById('edge-layer');
+  const th=edgeTh();
+  let html='';
+  // block colors
+  const blockColors=['#3b33b0','#0b6e4f','#b85c00','#942828','#6b35b0','#0e7490'];
+  for(const edge of edges){
+    const v1=verts.find(v=>v.id===edge.from),v2=verts.find(v=>v.id===edge.to);
+    if(!v1||!v2)continue;
+    const path=getEdgePath(v1,v2,edge);
+    const mid=getEdgeMid(v1,v2,edge);
+    const isSel=selected?.type==='edge'&&selected.id===edge.id;
+    const isMulti=multiSel.has(edge.id);
+    const isBridge=highlightBridges.has(edge.id);
+    // block highlight
+    const blockIdx=highlightBlocks.findIndex(b=>b.edges.has(edge.id));
+    let col=edge.color||'#49463e';
+    let sw=th;
+    if(isSel){col='#3b33b0';sw=th+1}
+    else if(isMulti){col='#d97706';sw=th+1}
+    else if(isBridge){col='#b85c00';sw=th+1.5}
+    else if(blockIdx>=0){col=blockColors[blockIdx%blockColors.length];sw=th+0.5}
+    const dash=edge.dashed?'stroke-dasharray="8,5"':'';
+    const ms=isSel?'-sel':isMulti?'-multi':'';
+    const markerEnd=edge.directed&&!edge.isLoop?`marker-end="url(#arr${ms})"`:'' ;
+    const op=edge.opacity!==undefined?edge.opacity:1;
+    html+=`<g data-eid="${edge.id}" onclick="edgeClick(event,'${edge.id}')" oncontextmenu="elemCtx(event,'edge','${edge.id}')">`;
+    html+=`<path d="${path}" stroke="transparent" stroke-width="${Math.max(14,th*4)}" fill="none" style="cursor:pointer"/>`;
+    html+=`<path d="${path}" stroke="${col}" stroke-width="${sw}" fill="none" ${dash} ${markerEnd} opacity="${op}" stroke-linecap="round"/>`;
+    if(isBridge){
+      // double line to indicate bridge
+      html+=`<path d="${path}" stroke="#b85c00" stroke-width="${sw*2.5}" fill="none" opacity="0.15" stroke-linecap="round" style="pointer-events:none"/>`;
+    }
+    if(edge.label){
+      const lbl=renderLbl(edge.label);
+      const fs=clamp(12/zoomLevel,7,15);
+      html+=`<text x="${mid.x}" y="${mid.y}" text-anchor="middle" dominant-baseline="middle" font-size="${fs}" font-family="Georgia,serif" font-style="italic" fill="${isSel?'#3b33b0':'#2a2820'}" style="pointer-events:none">${lbl}</text>`;
+    }
+    html+='</g>';
+  }
+  g.innerHTML=html;
+}
+
+function renderVertices(){
+  const g=document.getElementById('vertex-layer');
+  let html='';
+  for(const v of verts){
+    const r=NR(v);
+    const isSel=selected?.type==='vertex'&&selected.id===v.id;
+    const isMulti=multiSel.has(v.id);
+    const isStart=edgeStart===v.id;
+    const isCut=highlightCuts.has(v.id);
+    const fill=v.fillColor||'#eae8df';
+    let stroke=isSel?'#3b33b0':isMulti?'#d97706':isStart?'#0b6e4f':isCut?'#942828':(v.strokeColor||'#3a3830');
+    const sw=isSel||isMulti||isStart||isCut?2.8:1.5;
+    const lbl=renderLbl(v.label);
+    const op=v.opacity!==undefined?v.opacity:1;
+    html+=`<g data-vid="${v.id}" onmousedown="vertMD(event,'${v.id}')" oncontextmenu="elemCtx(event,'vertex','${v.id}')">`;
+    html+=`<circle cx="${v.x}" cy="${v.y}" r="${r+5}" fill="transparent" style="cursor:${tool==='move'||tool==='select'||tool==='multi'?'grab':'pointer'}"/>`;
+    if(isSel||isMulti)html+=`<circle cx="${v.x}" cy="${v.y}" r="${r+6}" fill="${isSel?'rgba(59,51,176,0.11)':'rgba(217,119,6,0.12)'}" stroke="none"/>`;
+    if(isCut)html+=`<circle cx="${v.x}" cy="${v.y}" r="${r+6}" fill="rgba(148,40,40,0.10)" stroke="${stroke}" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+    html+=`<circle cx="${v.x}" cy="${v.y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" opacity="${op}" filter="url(#fsm)"/>`;
+    const deg=verts.find(x=>x.id===v.id)?getDeg(v.id):0;
+    const fs=clamp(r*0.62,7,15);
+    html+=`<text x="${v.x}" y="${v.y}" text-anchor="middle" dominant-baseline="central" font-size="${fs}" font-family="Georgia,serif" font-style="italic" fill="${isSel?'#3b33b0':'#1a1918'}" style="pointer-events:none;user-select:none">${lbl}</text>`;
+    html+='</g>';
+  }
+  g.innerHTML=html;
+}
+
+function renderLbl(raw){
+  if(!raw)return'';
+  const m=raw.match(/^([^_^]*)(?:_\{?([^}^]*)\}?)?(?:\^\{?([^}]*)\}?)?$/);
+  if(!m)return escH(raw);
+  let out=escH(m[1]||'');
+  if(m[2])out+=`<tspan dy="4" font-size="75%">${escH(m[2])}</tspan>`;
+  if(m[3])out+=`<tspan dy="-6" font-size="75%">${escH(m[3])}</tspan>`;
+  return out;
+}
+
+// ══════════════════════════════════════════════════════
+//  GRAPH THEORY UTILITIES
+// ══════════════════════════════════════════════════════
+function getDeg(vid){
+  let d=0;
+  edges.forEach(e=>{
+    if(e.isLoop&&e.from===vid) d+=2;
+    else if(e.from===vid||e.to===vid) d++;
+  });
+  return d;
+}
+
+function getAdj(vid){
+  const nb=new Set();
+  edges.forEach(e=>{
+    if(!e.isLoop){
+      if(e.from===vid)nb.add(e.to);
+      if(e.to===vid)nb.add(e.from);
+    }
+  });
+  return nb;
+}
+
+// Union-Find
+function makeUF(){
+  const p={};
+  verts.forEach(v=>p[v.id]=v.id);
+  function find(x){return p[x]===x?x:(p[x]=find(p[x]))}
+  function unite(a,b){p[find(a)]=find(b)}
+  return{find,unite};
+}
+
+function countComponents(){
+  if(!verts.length)return 0;
+  const uf=makeUF();
+  edges.forEach(e=>{if(!e.isLoop)uf.unite(e.from,e.to)});
+  return new Set(verts.map(v=>uf.find(v.id))).size;
+}
+
+function isConnected(){return verts.length>0&&countComponents()===1}
+
+// DFS-based cut vertices (Tarjan)
+function findCutVertices(){
+  const cuts=new Set();
+  if(verts.length<2)return cuts;
+  const disc={},low={},parent={};
+  let timer=0;
+  const visited=new Set();
+  function dfs(u){
+    visited.add(u);disc[u]=low[u]=timer++;
+    let childCount=0;
+    for(const v of getAdj(u)){
+      if(!visited.has(v)){
+        childCount++;parent[v]=u;dfs(v);
+        low[u]=Math.min(low[u],low[v]);
+        if(parent[u]===undefined&&childCount>1)cuts.add(u);
+        if(parent[u]!==undefined&&low[v]>=disc[u])cuts.add(u);
+      } else if(v!==parent[u]){
+        low[u]=Math.min(low[u],disc[v]);
+      }
+    }
+  }
+  verts.forEach(v=>{if(!visited.has(v.id))dfs(v.id)});
+  return cuts;
+}
+
+// DFS-based bridges
+function findBridges(){
+  const bridges=new Set();
+  if(verts.length<2)return bridges;
+  const disc={},low={},parent={};
+  let timer=0;const visited=new Set();
+  function dfs(u){
+    visited.add(u);disc[u]=low[u]=timer++;
+    for(const e of edges.filter(e=>!e.isLoop&&(e.from===u||e.to===u))){
+      const v=e.from===u?e.to:e.from;
+      if(!visited.has(v)){
+        parent[v]=u;dfs(v);
+        low[u]=Math.min(low[u],low[v]);
+        if(low[v]>disc[u])bridges.add(e.id);
+      } else if(v!==parent[u]){
+        low[u]=Math.min(low[u],disc[v]);
+      }
+    }
+  }
+  verts.forEach(v=>{if(!visited.has(v.id))dfs(v.id)});
+  return bridges;
+}
+
+// Biconnected components (blocks)
+function findBlocks(){
+  const blocks=[];
+  if(verts.length<2)return blocks;
+  const disc={},low={},parent={};
+  let timer=0;const visited=new Set();
+  const stack=[];
+  function dfs(u){
+    visited.add(u);disc[u]=low[u]=timer++;
+    for(const e of edges.filter(e=>!e.isLoop&&(e.from===u||e.to===u))){
+      const v=e.from===u?e.to:e.from;
+      if(!visited.has(v)){
+        parent[v]=u;stack.push(e.id);dfs(v);
+        low[u]=Math.min(low[u],low[v]);
+        if(low[v]>=disc[u]){
+          const block={edges:new Set(),verts:new Set()};
+          while(true){const eid=stack.pop();block.edges.add(eid);const ed=edges.find(x=>x.id===eid);if(ed){block.verts.add(ed.from);block.verts.add(ed.to)}if(eid===e.id)break}
+          blocks.push(block);
+        }
+      } else if(v!==parent[u]&&disc[v]<disc[u]){
+        stack.push(e.id);low[u]=Math.min(low[u],disc[v]);
+      }
+    }
+  }
+  verts.forEach(v=>{if(!visited.has(v.id))dfs(v.id)});
+  return blocks;
+}
+
+function degreeSeq(){
+  return verts.map(v=>getDeg(v.id)).sort((a,b)=>b-a);
+}
+
+function isEulerian(){
+  if(!isConnected())return'Não (desconexo)';
+  const odds=verts.filter(v=>getDeg(v.id)%2!==0).length;
+  if(odds===0)return'Sim (circuito euleriano)';
+  if(odds===2)return'Trilha (semi-euleriano)';
+  return`Não (${odds} vértices ímpares)`;
+}
+
+function isBipartite(){
+  if(!verts.length)return'—';
+  const color={};let bipartite=true;
+  function bfs(start){
+    const q=[start];color[start]=0;
+    while(q.length){
+      const u=q.shift();
+      for(const v of getAdj(u)){
+        if(color[v]===undefined){color[v]=1-color[u];q.push(v)}
+        else if(color[v]===color[u]){bipartite=false}
+      }
+    }
+  }
+  verts.forEach(v=>{if(color[v.id]===undefined)bfs(v.id)});
+  return bipartite?'Sim':'Não';
+}
+
+function isRegular(){
+  if(!verts.length)return'—';
+  const degs=verts.map(v=>getDeg(v.id));
+  const allSame=degs.every(d=>d===degs[0]);
+  return allSame?`Sim (${degs[0]}-regular)`:'Não';
+}
+
+function diameter(){
+  if(!isConnected()||verts.length<2)return'∞ (desconexo)';
+  // BFS from each vertex
+  let diam=0;
+  function bfsDist(src){
+    const dist={[src]:0};const q=[src];
+    while(q.length){
+      const u=q.shift();
+      for(const v of getAdj(u)){
+        if(dist[v]===undefined){dist[v]=dist[u]+1;q.push(v)}
+      }
+    }
+    return dist;
+  }
+  let maxEcc=0;let minEcc=Infinity;
+  const eccs={};
+  verts.forEach(v=>{
+    const dist=bfsDist(v.id);
+    const ecc=Math.max(...Object.values(dist));
+    eccs[v.id]=ecc;
+    if(ecc>maxEcc)maxEcc=ecc;
+    if(ecc<minEcc)minEcc=ecc;
+  });
+  return{diam:maxEcc,radius:minEcc,eccs};
+}
+
+// ══════════════════════════════════════════════════════
+//  ANALYSIS PANEL
+// ══════════════════════════════════════════════════════
+function toggleAnalysis(){
+  const panel=document.getElementById('analysis-panel');
+  const btn=document.querySelector('.btn.analyze');
+  if(panel.classList.contains('open')){
+    panel.classList.remove('open');
+    if(btn)btn.classList.remove('active');
+    clearHighlights();renderAll();return;
+  }
+  panel.classList.add('open');
+  if(btn)btn.classList.add('active');
+  runAnalysis();
+}
+
+function runAnalysis(){
+  if(!document.getElementById('analysis-panel').classList.contains('open'))return;
+  clearHighlights();
+  const n=verts.length,m=edges.length;
+  if(n===0){document.getElementById('analysis-content').innerHTML='<em style="font-size:11px;color:var(--text3)">Nenhum vértice no canvas.</em>';return}
+
+  const cuts=findCutVertices();
+  const bridges=findBridges();
+  const blocks=findBlocks();
+  const degs=degreeSeq();
+  const maxDeg=degs[0]??0,minDeg=degs[degs.length-1]??0;
+  const avgDeg=n?((degs.reduce((a,b)=>a+b,0))/n).toFixed(2):'—';
+  const comps=countComponents();
+  const euler=isEulerian();
+  const bip=isBipartite();
+  const reg=isRegular();
+  const distInfo=diameter();
+
+  // Apply highlights
+  cuts.forEach(id=>highlightCuts.add(id));
+  bridges.forEach(id=>highlightBridges.add(id));
+  highlightBlocks=blocks;
+
+  const hasLoop=edges.some(e=>e.isLoop);
+  const hasMulti=edges.some(e=>{
+    return edges.filter(e2=>!e2.isLoop&&((e2.from===e.from&&e2.to===e.to)||(e2.from===e.to&&e2.to===e.from))).length>1;
+  });
+
+  const bool=(v,yes='Sim',no='Não')=>`<span class="prop-bool ${v?'yes':'no'}">${v?yes:no}</span>`;
+
+  let html=`
+  <div class="analysis-section">
+    <h5>Básico</h5>
+    <div class="prop-line"><span>Vértices (n)</span><span>${n}</span></div>
+    <div class="prop-line"><span>Arestas (m)</span><span>${m}</span></div>
+    <div class="prop-line"><span>Componentes</span><span>${comps}</span></div>
+    <div class="prop-line"><span>Conexo</span><span>${bool(comps===1)}</span></div>
+    <div class="prop-line"><span>Tem laços</span><span>${bool(hasLoop)}</span></div>
+    <div class="prop-line"><span>Arestas múltiplas</span><span>${bool(hasMulti)}</span></div>
+  </div>
+  <div class="analysis-section">
+    <h5>Graus</h5>
+    <div class="prop-line"><span>Grau máximo (Δ)</span><span class="highlight-badge hb-max">Δ = ${maxDeg}</span></div>
+    <div class="prop-line"><span>Grau mínimo (δ)</span><span class="highlight-badge hb-min">δ = ${minDeg}</span></div>
+    <div class="prop-line"><span>Grau médio</span><span>${avgDeg}</span></div>
+    <div class="prop-line"><span>Regular</span><span>${reg}</span></div>
+    <div class="prop-line"><span>Seq. de graus</span><span style="font-size:10px">[${degs.join(', ')}]</span></div>
+  </div>
+  <div class="analysis-section">
+    <h5>Propriedades</h5>
+    <div class="prop-line"><span>Bipartido</span><span>${bool(bip==='Sim')}</span></div>
+    <div class="prop-line"><span>Euleriano</span><span style="font-size:10px">${euler}</span></div>
+    ${typeof distInfo==='object'?`
+    <div class="prop-line"><span>Diâmetro</span><span>${distInfo.diam}</span></div>
+    <div class="prop-line"><span>Raio</span><span>${distInfo.radius}</span></div>`:'<div class="prop-line"><span>Diâmetro</span><span>∞</span></div>'}
+  </div>
+  <div class="analysis-section">
+    <h5>Cortes <span style="font-size:9px;color:var(--text3)">(destacados no grafo)</span></h5>
+    <div class="prop-line"><span>Vértices de corte</span><span>${cuts.size}</span></div>
+    <div class="prop-tags">`;
+  cuts.forEach(id=>{const v=verts.find(v=>v.id===id);if(v)html+=`<span class="highlight-badge hb-cut">${v.label.replace(/[{}]/g,'')}</span>`;});
+  html+=`</div>
+    <div class="prop-line" style="margin-top:5px"><span>Pontes (bridges)</span><span>${bridges.size}</span></div>
+    <div class="prop-tags">`;
+  bridges.forEach(id=>{const e=edges.find(e=>e.id===id);if(e){const v1=verts.find(v=>v.id===e.from),v2=verts.find(v=>v.id===e.to);if(v1&&v2)html+=`<span class="highlight-badge hb-bridge">${v1.label.replace(/[{}]/g,'')}-${v2.label.replace(/[{}]/g,'')}</span>`;}});
+  html+=`</div></div>
+  <div class="analysis-section">
+    <h5>Blocos (biconexos)</h5>
+    <div class="prop-line"><span>Número de blocos</span><span>${blocks.length}</span></div>
+    <div class="prop-tags">`;
+  const bColors=['#3b33b0','#0b6e4f','#b85c00','#942828','#6b35b0','#0e7490'];
+  blocks.forEach((b,i)=>{
+    const col=bColors[i%bColors.length];
+    html+=`<span class="highlight-badge" style="background:${col}18;color:${col};border-color:${col}44">B${i+1}: ${b.verts.size}v, ${b.edges.size}e</span>`;
+  });
+  html+=`</div></div>
+  <div class="analysis-section">
+    <h5>Legenda de cores</h5>
+    <div class="legend-row"><div class="legend-dot" style="background:#942828;outline:2px dashed #942828;outline-offset:2px"></div>Vértice de corte</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#b85c00;border-radius:0"></div>Ponte (bridge)</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#3b33b0"></div><div class="legend-dot" style="background:#0b6e4f"></div><div class="legend-dot" style="background:#b85c00"></div>Blocos distintos</div>
+  </div>`;
+  document.getElementById('analysis-content').innerHTML=html;
+  renderAll();
+}
+
+// ══════════════════════════════════════════════════════
+//  STATS
+// ══════════════════════════════════════════════════════
+function updateStats(){
+  document.getElementById('stat-v').textContent=verts.length;
+  document.getElementById('stat-e').textContent=edges.length;
+  document.getElementById('stat-c').textContent=verts.length?countComponents():'—';
+  document.getElementById('stat-s').textContent=multiSel.size>0?multiSel.size:(selected?1:'—');
+}
+
+// ══════════════════════════════════════════════════════
+//  SIDEBAR
+// ══════════════════════════════════════════════════════
+function updateSidebar(){
+  const div=document.getElementById('sidebar-content');
+  if(multiSel.size>0){
+    const vs=[...multiSel].filter(id=>verts.find(v=>v.id===id));
+    const es=[...multiSel].filter(id=>edges.find(e=>e.id===id));
+    div.innerHTML=`
+    <div class="sec-label">Seleção Múltipla</div>
+    <div class="multi-info">${vs.length} vért. + ${es.length} arestas</div>
+    <div style="margin-top:8px">
+    <div class="sec-label">Aplicar a todos</div>
+    <div class="prop"><label>Fill</label><input type="color" value="#eae8df" oninput="applyMulti('fillColor',this.value)"/><span style="font-size:10px;color:var(--text2)">vértices</span></div>
+    <div class="prop"><label>Stroke</label><input type="color" value="#3a3830" oninput="applyMulti('strokeColor',this.value)"/></div>
+    <div class="prop"><label>Opac.</label><input type="range" min="0.1" max="1" step="0.05" value="1" oninput="applyMultiOp(+this.value)"><span class="vb">1</span></div>
+    </div>
+    <button class="sb-btn" onclick="alignSelected('h')">↔ Alinhar horizontal</button>
+    <button class="sb-btn" onclick="alignSelected('v')">↕ Alinhar vertical</button>
+    <button class="sb-btn" onclick="distributeSelected('h')">⊞ Distribuir horiz.</button>
+    <button class="sb-btn" onclick="distributeSelected('v')">⊟ Distribuir vert.</button>
+    <button class="sb-btn red" onclick="deleteSelected()">✕ Deletar seleção</button>`;
+  } else if(selected?.type==='vertex'){
+    const v=verts.find(x=>x.id===selected.id);
+    if(!v){div.innerHTML=hintHTML();return}
+    const deg=getDeg(v.id);
+    div.innerHTML=`
+    <div class="sec-label">Vértice</div>
+    <div class="prop"><label>Rótulo</label><input type="text" value="${escH(v.label)}" onchange="upV('${v.id}','label',this.value)"/></div>
+    <div class="prop"><label>Fill</label><input type="color" value="${v.fillColor||'#eae8df'}" oninput="upV('${v.id}','fillColor',this.value)"/></div>
+    <div class="prop"><label>Borda</label><input type="color" value="${v.strokeColor||'#3a3830'}" oninput="upV('${v.id}','strokeColor',this.value)"/></div>
+    <div class="prop"><label>Raio</label>
+      <input type="range" min="8" max="50" step="1" value="${NR(v)}" oninput="upV('${v.id}','radius',+this.value);this.nextSibling.textContent=this.value">
+      <span class="vb">${NR(v)}</span></div>
+    <div class="prop"><label>Opac.</label>
+      <input type="range" min="0.1" max="1" step="0.05" value="${v.opacity||1}" oninput="upV('${v.id}','opacity',+this.value);this.nextSibling.textContent=(+this.value).toFixed(2)">
+      <span class="vb">${(v.opacity||1).toFixed(2)}</span></div>
+    <div class="prop"><label>X</label><input type="number" value="${Math.round(v.x)}" onchange="upV('${v.id}','x',+this.value)"/></div>
+    <div class="prop"><label>Y</label><input type="number" value="${Math.round(v.y)}" onchange="upV('${v.id}','y',+this.value)"/></div>
+    <div style="background:var(--surface2);border-radius:var(--rs);padding:6px 8px;font-size:11px;color:var(--text2);margin-top:4px">
+      Grau: <strong style="color:var(--accent)">${deg}</strong> · Vizinhos: ${[...getAdj(v.id)].map(id=>{const vv=verts.find(v=>v.id===id);return vv?vv.label.replace(/[{}]/g,''):'?'}).join(', ')||'—'}
+    </div>`;
+  } else if(selected?.type==='edge'){
+    const e=edges.find(x=>x.id===selected.id);
+    if(!e){div.innerHTML=hintHTML();return}
+    div.innerHTML=`
+    <div class="sec-label">Aresta</div>
+    <div class="prop"><label>Rótulo</label><input type="text" value="${escH(e.label||'')}" onchange="upE('${e.id}','label',this.value)" placeholder="e_{1}"/></div>
+    <div class="prop"><label>Cor</label><input type="color" value="${e.color||'#49463e'}" oninput="upE('${e.id}','color',this.value)"/></div>
+    <div class="prop"><label>Opac.</label>
+      <input type="range" min="0.1" max="1" step="0.05" value="${e.opacity||1}" oninput="upE('${e.id}','opacity',+this.value);this.nextSibling.textContent=(+this.value).toFixed(2)">
+      <span class="vb">${(e.opacity||1).toFixed(2)}</span></div>
+    <div class="prop"><label>Direcionada</label><input type="checkbox" ${e.directed?'checked':''} onchange="upE('${e.id}','directed',this.checked)"/></div>
+    <div class="prop"><label>Tracejada</label><input type="checkbox" ${e.dashed?'checked':''} onchange="upE('${e.id}','dashed',this.checked)"/></div>
+    <div class="prop"><label>Curva</label><input type="checkbox" ${e.curved?'checked':''} onchange="upE('${e.id}','curved',this.checked)"/></div>
+    ${e.isLoop?`<div class="prop"><label>Direção</label><select onchange="upE('${e.id}','loopDir',+this.value)">${[0,45,90,135,180,225,270,315].map(d=>`<option value="${d}"${(e.loopDir||0)==d?' selected':''}>${d}°</option>`).join('')}</select></div>`:''}
+    ${!e.isLoop&&e.curved?`<div class="prop"><label>Curv.</label><input type="range" min="-120" max="120" step="5" value="${e.bend||35}" oninput="upE('${e.id}','bend',+this.value);this.nextSibling.textContent=this.value"><span class="vb">${e.bend||35}</span></div>`:''}
+    <div style="background:var(--surface2);border-radius:var(--rs);padding:5px 8px;font-size:10.5px;color:var(--text2);margin-top:4px">
+      ${e.isLoop?'Laço':'Aresta'}: <strong>${(verts.find(v=>v.id===e.from)||{label:'?'}).label.replace(/[{}]/g,'')}</strong> ${e.directed?'→':'—'} <strong>${(verts.find(v=>v.id===e.to)||{label:'?'}).label.replace(/[{}]/g,'')}</strong>
+      ${highlightBridges.has(e.id)?'<br><span style="color:var(--orange);font-weight:500">⚠ Ponte (bridge)</span>':''}
+    </div>`;
+  } else {
+    div.innerHTML=hintHTML();
+  }
+}
+
+function hintHTML(){return`<div class="sec-label">Ferramentas</div><div class="hint">
+  <p><strong>Selecionar</strong> — clique/arraste</p>
+  <p><strong>Multi</strong> — caixa de seleção</p>
+  <p><strong>Vértice</strong> — clique na tela</p>
+  <p><strong>Aresta</strong> — 2 vértices</p>
+  <p><strong>Laço</strong> — 1 vértice</p>
+  <p><strong>Subdivisão</strong> — 1 aresta</p>
+  <p><strong>Deletar</strong> — qualquer elem.</p>
+  <p style="margin-top:5px"><strong>Clique direito</strong> → menu</p>
+  <p><strong>🔬 Analisar</strong> → propriedades completas + vértices de corte, pontes, blocos</p>
+</div>`}
+
+function upV(id,key,val){const v=verts.find(v=>v.id===id);if(v){v[key]=val;renderAll();if(document.getElementById('analysis-panel').classList.contains('open'))runAnalysis()}}
+function upE(id,key,val){const e=edges.find(e=>e.id===id);if(e){e[key]=val;renderAll()}}
+function applyMulti(key,val){[...multiSel].forEach(id=>{const v=verts.find(v=>v.id===id);if(v)v[key]=val;const e=edges.find(e=>e.id===id);if(e)e.color=val});renderAll()}
+function applyMultiOp(o){[...multiSel].forEach(id=>{const v=verts.find(v=>v.id===id);if(v)v.opacity=o;const e=edges.find(e=>e.id===id);if(e)e.opacity=o});renderAll()}
+
+// Align / distribute
+function selVerts(){return[...multiSel].map(id=>verts.find(v=>v.id===id)).filter(Boolean)}
+function alignSelected(axis){
+  const sv=selVerts();if(sv.length<2)return;
+  if(axis==='h'){const avg=sv.reduce((s,v)=>s+v.y,0)/sv.length;sv.forEach(v=>v.y=avg)}
+  else{const avg=sv.reduce((s,v)=>s+v.x,0)/sv.length;sv.forEach(v=>v.x=avg)}
+  saveHistory();renderAll();
+}
+function distributeSelected(axis){
+  const sv=selVerts();if(sv.length<3)return;
+  if(axis==='h'){sv.sort((a,b)=>a.x-b.x);const sp=sv[sv.length-1].x-sv[0].x;sv.forEach((v,i)=>v.x=sv[0].x+i*sp/(sv.length-1))}
+  else{sv.sort((a,b)=>a.y-b.y);const sp=sv[sv.length-1].y-sv[0].y;sv.forEach((v,i)=>v.y=sv[0].y+i*sp/(sv.length-1))}
+  saveHistory();renderAll();
+}
+function deleteSelected(){
+  const ids=[...multiSel];
+  ids.filter(id=>verts.find(v=>v.id===id)).forEach(id=>{edges=edges.filter(e=>e.from!==id&&e.to!==id)});
+  verts=verts.filter(v=>!multiSel.has(v.id));
+  edges=edges.filter(e=>!multiSel.has(e.id));
+  multiSel.clear();selected=null;clearHighlights();saveHistory();renderAll();
+}
+
+// ══════════════════════════════════════════════════════
+//  MOUSE EVENTS
+// ══════════════════════════════════════════════════════
+function svgMD(e){
+  hideCtx();
+  const pos=svgPos(e);
+  const isGrid=e.target===SVG||e.target.closest('#grid-layer')||e.target===TG;
+
+  // Middle mouse always pans
+  if(e.button===1){
+    isPanning=true;panStart={x:e.clientX-panX,y:e.clientY-panY};
+    SVG.style.cursor='grabbing';e.preventDefault();return;
+  }
+
+  // MOVE TOOL: click on background → start panning
+  if(tool==='move'&&isGrid&&e.button===0){
+    isPanning=true;panStart={x:e.clientX-panX,y:e.clientY-panY};
+    SVG.style.cursor='grabbing';return;
+  }
+
+  // MULTI TOOL: rubber-band selection on background
+  if(tool==='multi'&&isGrid){
+    const r=SVG.getBoundingClientRect();
+    const vb=SVG.viewBox.baseVal;
+    const rx=(e.clientX-r.left)*(vb.width||CW())/r.width;
+    const ry=(e.clientY-r.top)*(vb.height||CH())/r.height;
+    selBoxStart={sx:rx,sy:ry,wx:pos.x,wy:pos.y};
+    const sr=document.getElementById('sel-rect');
+    sr.style.display='block';sr.style.left=rx+'px';sr.style.top=ry+'px';sr.style.width='0';sr.style.height='0';
+    if(!e.shiftKey)multiSel.clear();
+    return;
+  }
+
+  if(isGrid){
+    if(tool==='vertex'){
+      const n=verts.length+1;
+      verts.push({id:uid(),x:snap(pos.x),y:snap(pos.y),label:`v_{${n}}`,fillColor:'#eae8df',strokeColor:'#3a3830',radius:defaultNodeR});
+      saveHistory();renderAll();
+    } else if(tool==='select'){
+      if(!e.shiftKey){selected=null;multiSel.clear();renderAll()}
+    }
+  }
+}
+
+function vertMD(e,vid){
+  e.stopPropagation();hideCtx();
+  const pos=svgPos(e);
+  const v=verts.find(v=>v.id===vid);
+
+  if(tool==='move'||tool==='select'){
+    selected={type:'vertex',id:vid};if(tool==='select')multiSel.clear();
+    dragging=vid;dragOffset={x:pos.x-v.x,y:pos.y-v.y};
+    SVG.style.cursor='grabbing';
+    renderAll();
+  } else if(tool==='multi'){
+    if(e.shiftKey){if(multiSel.has(vid))multiSel.delete(vid);else multiSel.add(vid);}
+    else{
+      if(!multiSel.has(vid)){multiSel.clear();multiSel.add(vid)}
+      dragGroup=[...multiSel].map(id=>{const vv=verts.find(v=>v.id===id);return vv?{id,ox:vv.x-pos.x,oy:vv.y-pos.y}:null}).filter(Boolean);
+      dragging='__multi__';
+    }
+    renderAll();
+  } else if(tool==='edge'){
+    if(!edgeStart){edgeStart=vid;setStatus(`Origem: ${v.label} → clique no destino`);renderAll()}
+    else{addEdge(edgeStart,vid,vid===edgeStart);edgeStart=null;setStatus('Clique no vértice de origem da aresta');saveHistory();clearHighlights();renderAll()}
+  } else if(tool==='loop'){
+    const existLoops=edges.filter(ed=>ed.isLoop&&ed.from===vid);
+    edges.push({id:uid(),from:vid,to:vid,label:'',curved:true,bend:0,directed:false,dashed:false,color:'#49463e',isLoop:true,loopDir:existLoops.length*80});
+    saveHistory();clearHighlights();renderAll();
+  } else if(tool==='delete'){
+    edges=edges.filter(ed=>ed.from!==vid&&ed.to!==vid);
+    verts=verts.filter(v=>v.id!==vid);
+    if(selected?.id===vid)selected=null;
+    saveHistory();clearHighlights();renderAll();
+  }
+}
+
+function addEdge(from,to,isLoop){
+  edges.push({id:uid(),from,to,label:'',curved:false,bend:0,directed:false,dashed:false,color:'#49463e',isLoop:!!isLoop,loopDir:0});
+}
+
+function edgeClick(e,eid){
+  e.stopPropagation();hideCtx();
+  if(tool==='move'||tool==='select'){selected={type:'edge',id:eid};if(tool==='select')multiSel.clear();renderAll()}
+  else if(tool==='multi'){if(e.shiftKey){if(multiSel.has(eid))multiSel.delete(eid);else multiSel.add(eid)}else{multiSel.clear();multiSel.add(eid)};renderAll()}
+  else if(tool==='delete'){edges=edges.filter(ed=>ed.id!==eid);if(selected?.id===eid)selected=null;saveHistory();clearHighlights();renderAll()}
+  else if(tool==='subdivide'){
+    const edge=edges.find(ed=>ed.id===eid);if(!edge||edge.isLoop)return;
+    const v1=verts.find(v=>v.id===edge.from),v2=verts.find(v=>v.id===edge.to);if(!v1||!v2)return;
+    const n=verts.length+1;
+    const nv={id:uid(),x:(v1.x+v2.x)/2,y:(v1.y+v2.y)/2,label:`v_{${n}}`,fillColor:'#eae8df',strokeColor:'#3a3830',radius:defaultNodeR};
+    verts.push(nv);edges=edges.filter(ed=>ed.id!==eid);
+    edges.push({...edge,id:uid(),to:nv.id,isLoop:false},{...edge,id:uid(),from:nv.id,to:edge.to,isLoop:false});
+    saveHistory();clearHighlights();renderAll();
+  }
+}
+
+function svgMM(e){
+  if(isPanning){panX=e.clientX-panStart.x;panY=e.clientY-panStart.y;renderAll();return}
+  const pos=svgPos(e);mousePos=pos;
+
+  if(dragging==='__multi__'){
+    dragGroup.forEach(({id,ox,oy})=>{const v=verts.find(v=>v.id===id);if(v){v.x=snap(pos.x+ox);v.y=snap(pos.y+oy)}});
+    renderAll();return;
+  }
+  if(dragging){
+    const v=verts.find(v=>v.id===dragging);
+    if(v){v.x=snap(pos.x-dragOffset.x);v.y=snap(pos.y-dragOffset.y);renderAll()}
+    return;
+  }
+  if(selBoxStart){
+    const r=SVG.getBoundingClientRect();const vb=SVG.viewBox.baseVal;
+    const rx=(e.clientX-r.left)*(vb.width||CW())/r.width;
+    const ry=(e.clientY-r.top)*(vb.height||CH())/r.height;
+    const x=Math.min(selBoxStart.sx,rx),y=Math.min(selBoxStart.sy,ry);
+    const w=Math.abs(rx-selBoxStart.sx),h=Math.abs(ry-selBoxStart.sy);
+    const sr=document.getElementById('sel-rect');
+    sr.style.left=x+'px';sr.style.top=y+'px';sr.style.width=w+'px';sr.style.height=h+'px';
+    const x1=Math.min(selBoxStart.wx,pos.x),x2=Math.max(selBoxStart.wx,pos.x);
+    const y1=Math.min(selBoxStart.wy,pos.y),y2=Math.max(selBoxStart.wy,pos.y);
+    verts.forEach(v=>{if(v.x>=x1&&v.x<=x2&&v.y>=y1&&v.y<=y2)multiSel.add(v.id);else if(!e.shiftKey)multiSel.delete(v.id)});
+    renderAll();return;
+  }
+  if(edgeStart){
+    const sv=verts.find(v=>v.id===edgeStart);
+    if(sv)document.getElementById('temp-layer').innerHTML=`<line x1="${sv.x}" y1="${sv.y}" x2="${pos.x}" y2="${pos.y}" stroke="#3b33b0" stroke-width="${1.5/zoomLevel}" stroke-dasharray="${6/zoomLevel},${4/zoomLevel}" opacity="0.7" pointer-events="none"/>`;
+  } else document.getElementById('temp-layer').innerHTML='';
+}
+
+function svgMU(e){
+  if(isPanning){isPanning=false;SVG.style.cursor=toolCursor(tool);}
+  if(dragging&&dragging!=='__multi__'){saveHistory();SVG.style.cursor=toolCursor(tool);}
+  dragging=null;dragGroup=[];
+  if(selBoxStart){selBoxStart=null;document.getElementById('sel-rect').style.display='none';if(multiSel.size>0)renderAll()}
+}
+
+// ══════════════════════════════════════════════════════
+//  CONTEXT MENU
+// ══════════════════════════════════════════════════════
+function svgCtx(e){e.preventDefault();hideCtx()}
+function elemCtx(e,type,id){
+  e.preventDefault();e.stopPropagation();
+  ctxTarget={type,id};
+  const m=document.getElementById('ctx-menu');
+  m.classList.add('open');m.style.left=e.clientX+'px';m.style.top=e.clientY+'px';
+  document.getElementById('ctx-conn').style.display=type==='vertex'?'flex':'none';
+}
+function hideCtx(){document.getElementById('ctx-menu').classList.remove('open')}
+document.addEventListener('click',hideCtx);
+function ctxAction(action){
+  hideCtx();if(!ctxTarget)return;
+  const{type,id}=ctxTarget;
+  if(action==='label'){
+    const el=verts.find(v=>v.id===id)||edges.find(e=>e.id===id);
+    const newLbl=prompt('Novo rótulo:',el?.label||'');
+    if(newLbl!==null){if(verts.find(v=>v.id===id))verts.find(v=>v.id===id).label=newLbl;else{const e=edges.find(e=>e.id===id);if(e)e.label=newLbl}saveHistory();renderAll()}
+  } else if(action==='dup'){
+    const v=verts.find(v=>v.id===id);if(v)verts.push({...v,id:uid(),x:v.x+35,y:v.y+35});saveHistory();renderAll();
+  } else if(action==='conn'){
+    if(type==='vertex')verts.forEach(v=>{if(v.id!==id)addEdge(id,v.id,false)});saveHistory();clearHighlights();renderAll();
+  } else if(action==='del'){
+    if(type==='vertex'){edges=edges.filter(e=>e.from!==id&&e.to!==id);verts=verts.filter(v=>v.id!==id)}
+    else edges=edges.filter(e=>e.id!==id);
+    if(selected?.id===id)selected=null;saveHistory();clearHighlights();renderAll();
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  GENERATORS
+// ══════════════════════════════════════════════════════
+function mkV(x,y,lbl,r){return{id:uid(),x,y,label:lbl,fillColor:'#eae8df',strokeColor:'#3a3830',radius:r||defaultNodeR}}
+function mkE(from,to,opts={}){return{id:uid(),from,to,label:'',curved:false,bend:0,directed:false,dashed:false,color:'#49463e',isLoop:false,loopDir:0,...opts}}
+
+function openModal(type){
+  modalType=type;hideCtx();
+  document.getElementById('modal-title').textContent='Gerar '+type;
+  const f=document.getElementById('modal-fields');
+  const nf=(id,lbl,def,lo,hi)=>`<div class="mf"><label>${lbl}</label><input type="number" id="${id}" min="${lo}" max="${hi}" value="${def}"/></div>`;
+  const maps={
+    Kn:  ()=>nf('gen-n','n (número de vértices)',5,1,14),
+    Cn:  ()=>nf('gen-n','n (número de vértices)',6,3,24),
+    Pn:  ()=>nf('gen-n','n (número de vértices)',6,2,24),
+    Bn:  ()=>nf('gen-n','n (número de laços)',3,1,8),
+    Wn:  ()=>nf('gen-n','n (raios do cubo, sem hub)',5,3,16),
+    Qn:  ()=>nf('gen-n','Dimensão do hipercubo Qₙ',2,1,4),
+    Kmn: ()=>nf('mn-m','m (partição esquerda)',2,1,8)+nf('mn-n','n (partição direita)',3,1,8),
+    product:()=>`
+      <div class="mf"><label>Segundo grafo G₂</label>
+      <select id="prod-type">
+        <option value="K2">K₂ (uma aresta)</option>
+        <option value="C4">C₄ (ciclo de 4)</option>
+        <option value="P3">P₃ (caminho de 3)</option>
+        <option value="K3">K₃ (triângulo)</option>
+      </select></div>
+      <div class="mf"><p class="note">O produto cartesiano G□G₂ duplica G e conecta cada vértice v de G à sua cópia v' em G₂, mantendo as arestas internas de ambos os fatores.</p></div>`,
+    save:()=>`<div class="mf"><label>Nome do arquivo</label><input type="text" id="save-name" value="meu-grafo"/></div>`,
+    load:()=>`
+      <div class="mf"><label>Cole o JSON aqui</label>
+      <textarea id="load-json" placeholder='{"verts":[...],"edges":[...]}'></textarea></div>
+      <div class="mf"><p class="note">O JSON é gerado pelo botão 💾 Salvar, que baixa um arquivo .json. Cole o conteúdo desse arquivo aqui.<br><br>Você também pode arrastar o arquivo .json direto para o canvas.</p></div>`,
+  };
+  f.innerHTML=(maps[type]||(()=>''))();
+  document.getElementById('modal-bg').classList.add('open');
+  setTimeout(()=>{const inp=f.querySelector('input,select,textarea');if(inp){inp.focus();try{inp.select()}catch(e){}}},50);
+}
+
+function confirmModal(){
+  const gv=(id,def)=>{const el=document.getElementById(id);return el?parseInt(el.value)||def:def};
+  if(modalType==='Kn')         loadGraph(genKn(gv('gen-n',5)));
+  else if(modalType==='Cn')    loadGraph(genCn(gv('gen-n',6)));
+  else if(modalType==='Pn')    loadGraph(genPn(gv('gen-n',6)));
+  else if(modalType==='Kmn')   loadGraph(genKmn(gv('mn-m',2),gv('mn-n',3)));
+  else if(modalType==='Bn')    loadGraph(genBn(gv('gen-n',3)));
+  else if(modalType==='Wn')    loadGraph(genWn(gv('gen-n',5)));
+  else if(modalType==='Qn')    loadGraph(genQn(gv('gen-n',2)));
+  else if(modalType==='product'){
+    const g2type=document.getElementById('prod-type')?.value||'K2';
+    doCartesianProduct(g2type);
+  }
+  // Conta toda geração de grafo
+  const isGen=['Kn','Cn','Pn','Kmn','Bn','Wn','Qn','complement','product'].includes(modalType);
+  if(isGen) trackGeneration();
+  else if(modalType==='save'){
+    const name=document.getElementById('save-name')?.value||'meu-grafo';
+    const a=document.createElement('a');
+    a.href='data:application/json,'+encodeURIComponent(JSON.stringify({verts,edges},null,2));
+    a.download=name+'.json';a.click();toast('Salvo: '+name+'.json');
+  }
+  else if(modalType==='load'){
+    try{
+      const json=document.getElementById('load-json').value.trim();
+      const d=JSON.parse(json);
+      if(Array.isArray(d.verts)&&Array.isArray(d.edges)){loadGraph(d);toast('Grafo carregado!')}
+      else toast('JSON inválido: precisa de {verts:[...], edges:[...]}');
+    }catch(err){toast('Erro ao parsear JSON: '+err.message);return}
+  }
+  document.getElementById('modal-bg').classList.remove('open');
+}
+
+function closeModal(e){if(e.target===document.getElementById('modal-bg'))document.getElementById('modal-bg').classList.remove('open')}
+function loadGraph(g){verts=g.verts||[];edges=g.edges||[];selected=null;multiSel=new Set();edgeStart=null;clearHighlights();saveHistory();renderAll()}
+
+// ── Generators ──
+function genKn(n){
+  n=clamp(n,1,14);const W=CW(),H=CH();
+  const pts=circleLayout(n,W/2,H/2,Math.min(210,50+n*18));
+  const vs=pts.map((p,i)=>mkV(p.x,p.y,`v_{${i+1}}`));
+  const es=[];for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)es.push(mkE(vs[i].id,vs[j].id));
+  return{verts:vs,edges:es};
+}
+function genCn(n){
+  n=clamp(n,3,24);const W=CW(),H=CH();
+  const pts=circleLayout(n,W/2,H/2,Math.min(220,50+n*16));
+  const vs=pts.map((p,i)=>mkV(p.x,p.y,`v_{${i+1}}`));
+  return{verts:vs,edges:vs.map((v,i)=>mkE(v.id,vs[(i+1)%n].id))};
+}
+function genPn(n){
+  n=clamp(n,2,24);const W=CW(),H=CH();
+  const sp=Math.min(90,(W-120)/(n-1));const sx=(W-(n-1)*sp)/2;
+  const vs=Array.from({length:n},(_,i)=>mkV(sx+i*sp,H/2,`v_{${i+1}}`));
+  return{verts:vs,edges:vs.slice(0,-1).map((v,i)=>mkE(v.id,vs[i+1].id))};
+}
+function genKmn(m,n){
+  m=clamp(m,1,8);n=clamp(n,1,8);const W=CW(),H=CH();
+  const th=H*0.65,sy=(H-th)/2,sp1=th/(m+1),sp2=th/(n+1);
+  const vl=Array.from({length:m},(_,i)=>mkV(W*0.26,sy+sp1*(i+1),`u_{${i+1}}`));
+  const vr=Array.from({length:n},(_,i)=>mkV(W*0.74,sy+sp2*(i+1),`w_{${i+1}}`));
+  const es=[];for(let i=0;i<m;i++)for(let j=0;j<n;j++)es.push(mkE(vl[i].id,vr[j].id));
+  return{verts:[...vl,...vr],edges:es};
+}
+function genBn(n){
+  n=clamp(n,1,8);const W=CW(),H=CH();
+  const v=mkV(W/2,H/2,'v');
+  return{verts:[v],edges:Array.from({length:n},(_,i)=>({...mkE(v.id,v.id),isLoop:true,loopDir:i*(360/n),label:`e_{${i+1}}`}))};
+}
+function genWn(n){
+  n=clamp(n,3,16);const W=CW(),H=CH();
+  const hub=mkV(W/2,H/2,'h');
+  const pts=circleLayout(n,W/2,H/2,Math.min(200,50+n*16));
+  const vs=pts.map((p,i)=>mkV(p.x,p.y,`v_{${i+1}}`));
+  const es=[];vs.forEach(v=>es.push(mkE(hub.id,v.id)));vs.forEach((v,i)=>es.push(mkE(v.id,vs[(i+1)%n].id)));
+  return{verts:[hub,...vs],edges:es};
+}
+function genQn(n){
+  n=clamp(n,1,4);const W=CW(),H=CH();
+  const count=1<<n;const posMap=[];
+  // Lay out by Gray code
+  const layouts={
+    1:[[W/2-90,H/2],[W/2+90,H/2]],
+    2:[[W/2-90,H/2+80],[W/2+90,H/2+80],[W/2-90,H/2-80],[W/2+90,H/2-80]],
+    3:[[W/2-100,H/2+100],[W/2+60,H/2+100],[W/2-100,H/2-60],[W/2+60,H/2-60],
+       [W/2-160,H/2+40],[W/2,H/2+40],[W/2-160,H/2-120],[W/2,H/2-120]],
+    4:null
+  };
+  const vs=Array.from({length:count},(_,i)=>{
+    const bits=i.toString(2).padStart(n,'0');
+    let x,y;
+    if(layouts[n]&&layouts[n][i]){x=layouts[n][i][0];y=layouts[n][i][1]}
+    else{const p=circleLayout(count,W/2,H/2,180);x=p[i].x;y=p[i].y}
+    return mkV(x,y,bits);
+  });
+  const idByBits={};vs.forEach((v,i)=>idByBits[i.toString(2).padStart(n,'0')]=v.id);
+  const es=[];
+  for(let i=0;i<count;i++)for(let bit=0;bit<n;bit++){
+    const j=i^(1<<bit);if(i<j)es.push(mkE(vs[i].id,vs[j].id));
+  }
+  return{verts:vs,edges:es};
+}
+
+// ── Produto Cartesiano G □ G₂ ──
+// A vertex (u,v) of G□G₂ is adjacent to (u,v') if vv' ∈ E(G₂)
+// and adjacent to (u',v) if uu' ∈ E(G)
+function doCartesianProduct(g2type){
+  if(verts.length===0){toast('Adicione vértices ao grafo G primeiro');return}
+  // Build G₂
+  let g2;
+  if(g2type==='K2')      g2=buildMiniGraph(['a','b'],[['a','b']]);
+  else if(g2type==='C4') g2=buildMiniGraph(['a','b','c','d'],[['a','b'],['b','c'],['c','d'],['d','a']]);
+  else if(g2type==='P3') g2=buildMiniGraph(['a','b','c'],[['a','b'],['b','c']]);
+  else if(g2type==='K3') g2=buildMiniGraph(['a','b','c'],[['a','b'],['b','c'],['a','c']]);
+
+  // Product vertices: for each (u in G, v in G₂) create a vertex
+  // Position: u's position offset by v's relative position
+  const W=CW(),H=CH();
+  const g2cx=g2.verts.reduce((s,v)=>s+v.x,0)/g2.verts.length;
+  const g2cy=g2.verts.reduce((s,v)=>s+v.y,0)/g2.verts.length;
+
+  // scale G₂ positions
+  const scaleG2=0.7;
+
+  const prodVerts=[];
+  const prodEdges=[];
+  // id map: [G_vid, G2_vid] -> new vertex id
+  const pMap={};
+
+  verts.forEach((u,ui)=>{
+    g2.verts.forEach((v2,vi)=>{
+      const dx=(v2.x-g2cx)*scaleG2, dy=(v2.y-g2cy)*scaleG2;
+      const lbl=`(${u.label.replace(/[{}]/g,'')},${v2.label})`;
+      const nv=mkV(u.x+dx, u.y+dy, lbl);
+      nv.fillColor=u.fillColor||'#eae8df';
+      pMap[u.id+'|'+v2.id]=nv.id;
+      prodVerts.push(nv);
+    });
+  });
+
+  // Edges from G (connect (u,v)-(u',v) for each uu' in G, for each v in G₂)
+  edges.filter(e=>!e.isLoop).forEach(e=>{
+    g2.verts.forEach(v2=>{
+      const from=pMap[e.from+'|'+v2.id], to=pMap[e.to+'|'+v2.id];
+      if(from&&to)prodEdges.push(mkE(from,to,{color:'#49463e'}));
+    });
+  });
+
+  // Edges from G₂ (connect (u,v)-(u,v') for each vv' in G₂, for each u in G)
+  g2.edges.forEach(e2=>{
+    verts.forEach(u=>{
+      const from=pMap[u.id+'|'+e2.from], to=pMap[u.id+'|'+e2.to];
+      if(from&&to)prodEdges.push(mkE(from,to,{color:'#3b33b0',dashed:true}));
+    });
+  });
+
+  loadGraph({verts:prodVerts,edges:prodEdges});
+  toast(`G □ ${g2type} gerado: ${prodVerts.length} vértices, ${prodEdges.length} arestas`);
+}
+
+function buildMiniGraph(lbls,edgePairs){
+  const cx=CW()/2,cy=CH()/2,r=100;
+  const pts=circleLayout(lbls.length,cx,cy,r);
+  const vs=lbls.map((l,i)=>mkV(pts[i].x,pts[i].y,l));
+  const idMap={};lbls.forEach((l,i)=>idMap[l]=vs[i].id);
+  const es=edgePairs.map(([a,b])=>mkE(idMap[a],idMap[b]));
+  return{verts:vs,edges:es};
+}
+
+// ── Complement ──
+function doComplement(){trackGeneration();
+  if(verts.length===0){toast('Nenhum vértice no canvas');return}
+  const loops=edges.filter(e=>e.isLoop);
+  const newEdges=[];
+  for(let i=0;i<verts.length;i++)for(let j=i+1;j<verts.length;j++){
+    const a=verts[i],b=verts[j];
+    const exists=edges.some(e=>!e.isLoop&&((e.from===a.id&&e.to===b.id)||(e.from===b.id&&e.to===a.id)));
+    if(!exists)newEdges.push(mkE(a.id,b.id));
+  }
+  loadGraph({verts:[...verts],edges:[...loops,...newEdges]});
+  toast(`Ḡ gerado: ${newEdges.length} arestas`);
+}
+
+// ══════════════════════════════════════════════════════
+//  AUTO LAYOUT
+// ══════════════════════════════════════════════════════
+function autoLayout(){
+  if(verts.length<2){toast('Adicione mais vértices');return}
+  toast('Calculando layout…');
+  const W=CW(),H=CH();
+  verts.forEach((v,i)=>{if(!v.x||!v.y){v.x=W/2+Math.cos(2*Math.PI*i/verts.length)*150;v.y=H/2+Math.sin(2*Math.PI*i/verts.length)*150}});
+  const ideal=Math.min(140,Math.sqrt(W*H/Math.max(verts.length,1))*1.2);
+  for(let iter=0;iter<200;iter++){
+    const force={};verts.forEach(v=>force[v.id]={x:0,y:0});
+    for(let i=0;i<verts.length;i++)for(let j=i+1;j<verts.length;j++){
+      const a=verts[i],b=verts[j];const dx=b.x-a.x,dy=b.y-a.y;const d=Math.sqrt(dx*dx+dy*dy)||1;const f=ideal*ideal/d;
+      force[a.id].x-=f*dx/d;force[a.id].y-=f*dy/d;force[b.id].x+=f*dx/d;force[b.id].y+=f*dy/d;
+    }
+    edges.filter(e=>!e.isLoop).forEach(e=>{
+      const a=verts.find(v=>v.id===e.from),b=verts.find(v=>v.id===e.to);if(!a||!b)return;
+      const dx=b.x-a.x,dy=b.y-a.y,d=Math.sqrt(dx*dx+dy*dy)||1;const f=d*d/ideal*0.3;
+      force[a.id].x+=f*dx/d;force[a.id].y+=f*dy/d;force[b.id].x-=f*dx/d;force[b.id].y-=f*dy/d;
+    });
+    const temp=Math.max(1.5,18*(1-iter/200));
+    verts.forEach(v=>{const f=force[v.id];const mag=Math.sqrt(f.x*f.x+f.y*f.y)||1;const s=Math.min(temp,mag)/mag;v.x=clamp(v.x+f.x*s,50,W-50);v.y=clamp(v.y+f.y*s,50,H-50)});
+  }
+  saveHistory();renderAll();toast('Layout aplicado!');
+}
+
+// ══════════════════════════════════════════════════════
+//  TIKZ EXPORT
+// ══════════════════════════════════════════════════════
+function updateScaleDisplay(){
+  document.getElementById('scale-val').textContent=parseFloat(document.getElementById('tikz-scale').value).toFixed(1);
+  updateTikz();
+}
+function updateNR(){
+  defaultNodeR=parseInt(document.getElementById('default-node-r').value);
+  document.getElementById('node-r-val').textContent=defaultNodeR;
+  renderAll();
+}
+
+function updateTikz(){
+  const caption=document.getElementById('input-caption')?.value||'';
+  const labelStr=document.getElementById('input-label')?.value||'fig:grafo';
+  document.getElementById('tikz-code').value=generateTikz(caption,labelStr);
+}
+
+function nodeStyleDef(s){
+  const d={
+    default:'draw, circle, minimum size=22pt, inner sep=2pt, fill=black!10, font=\\small',
+    filled:'draw, circle, minimum size=22pt, inner sep=2pt, fill=black!25, font=\\small',
+    white:'draw, circle, minimum size=22pt, inner sep=2pt, fill=white, font=\\small',
+    minimal:'draw, circle, minimum size=22pt, inner sep=2pt, font=\\small',
+    point:'draw, circle, minimum size=4pt, inner sep=0pt, fill=black',
+  };
+  return d[s]||d.default;
+}
+
+function tikzColorDef(hex){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return{name:'c'+hex.slice(1).toUpperCase(),def:`\\definecolor{c${hex.slice(1).toUpperCase()}}{RGB}{${r},${g},${b}}`};
+}
+
+function generateTikz(caption,labelStr){
+  const H=CH();
+  const pos=document.getElementById('fig-pos')?.value||'H';
+  const nstyle=nodeStyleDef(document.getElementById('node-style')?.value||'default');
+  const scale=parseFloat(document.getElementById('tikz-scale').value)*0.01;
+  const lines=[];
+
+  // Collect custom colors
+  const colorDefs=new Map();
+  verts.forEach(v=>{
+    if(v.fillColor&&v.fillColor!=='#eae8df'){const c=tikzColorDef(v.fillColor);colorDefs.set(c.name,c.def)}
+    if(v.strokeColor&&v.strokeColor!=='#3a3830'){const c=tikzColorDef(v.strokeColor);colorDefs.set(c.name,c.def)}
+  });
+  edges.forEach(e=>{if(e.color&&e.color!=='#49463e'){const c=tikzColorDef(e.color);colorDefs.set(c.name,c.def)}});
+
+  lines.push(`\\begin{figure}[${pos}]`);
+  lines.push('  \\centering');
+  lines.push('  \\begin{tikzpicture}[');
+  lines.push(`    every node/.style={${nstyle}},`);
+  lines.push('    every edge/.style={thick},');
+  lines.push('    >=stealth');
+  lines.push('  ]');
+  if(colorDefs.size>0){lines.push('');colorDefs.forEach(def=>lines.push('    '+def))}
+  lines.push('');
+
+  for(const v of verts){
+    const tx=(v.x*scale).toFixed(2),ty=((H-v.y)*scale).toFixed(2);
+    const opts=[];
+    if(v.fillColor&&v.fillColor!=='#eae8df')opts.push(`fill=${tikzColorDef(v.fillColor).name}`);
+    if(v.strokeColor&&v.strokeColor!=='#3a3830')opts.push(`draw=${tikzColorDef(v.strokeColor).name}`);
+    const r=NR(v);if(r!==defaultNodeR)opts.push(`minimum size=${Math.round(r*2*scale*28)}pt`);
+    if(v.opacity&&v.opacity!==1)opts.push(`opacity=${v.opacity.toFixed(2)}`);
+    lines.push(`    \\node${opts.length?`[${opts.join(', ')}]`:''} (${v.id}) at (${tx},${ty}) {$${v.label}$};`);
+  }
+  lines.push('');
+
+  for(const e of edges){
+    const v1=verts.find(v=>v.id===e.from),v2=verts.find(v=>v.id===e.to);if(!v1||!v2)continue;
+    const opts=[];
+    if(e.directed)opts.push('->');
+    if(e.dashed)opts.push('dashed');
+    if(e.color&&e.color!=='#49463e')opts.push(tikzColorDef(e.color).name);
+    if(e.opacity&&e.opacity!==1)opts.push(`opacity=${e.opacity.toFixed(2)}`);
+
+    if(e.isLoop){
+      const deg=Math.round(e.loopDir||0);
+      opts.push(`loop, out=${(deg+50+360)%360}, in=${(deg-50+360)%360}, min distance=15mm, looseness=7`);
+      const lbl=e.label?`node[midway, auto, font=\\small] {$${e.label}$} `:'';
+      lines.push(`    \\path (${e.from}) edge[${opts.join(', ')}] ${lbl}(${e.from});`);
+    } else {
+      const parallels=edges.filter(ed=>(ed.from===e.from&&ed.to===e.to)||(ed.from===e.to&&ed.to===e.from));
+      const idx=parallels.findIndex(ed=>ed.id===e.id);const count=parallels.length;
+      let bv=e.bend||0;
+      if(count>1)bv=Math.round((idx-(count-1)/2)*28);else if(e.curved)bv=e.bend||22;
+      if(bv>0)opts.push(`bend left=${Math.abs(bv)}`);else if(bv<0)opts.push(`bend right=${Math.abs(bv)}`);
+      const optStr=opts.length?`[${opts.join(', ')}]`:'';
+      const lbl=e.label?`node[midway, above, font=\\small] {$${e.label}$} `:'';
+      lines.push(`    \\draw${optStr} (${e.from}) -- ${lbl}(${e.to});`);
+    }
+  }
+  lines.push('  \\end{tikzpicture}');
+  if(caption)lines.push(`  \\caption{${caption}}`);
+  if(labelStr)lines.push(`  \\label{${labelStr}}`);
+  lines.push('\\end{figure}');
+  return lines.join('\n');
+}
+
+function copyTikz(){
+  navigator.clipboard.writeText(document.getElementById('tikz-code').value).then(()=>{
+    const btn=document.getElementById('copy-btn');btn.textContent='✓ Copiado!';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='📋 Copiar';btn.classList.remove('copied')},2200);
+    trackGeneration();
+  }).catch(()=>toast('Erro ao copiar — tente pelo botão ⬇ .tex'));
+}
+function downloadTikz(){
+  if(verts.length===0){toast('Canvas vazio, nada para exportar');return}
+  const name=(document.getElementById('input-label')?.value||'grafo').replace(/[^a-z0-9_-]/gi,'_');
+  const a=document.createElement('a');
+  a.href='data:text/plain,'+encodeURIComponent(document.getElementById('tikz-code').value);
+  a.download=name+'.tex';a.click();toast('Arquivo .tex baixado!');
+  trackGeneration();
+}
+
+// ══════════════════════════════════════════════════════
+//  DRAG & DROP JSON
+// ══════════════════════════════════════════════════════
+const CA=document.getElementById('canvas-area');
+CA.addEventListener('dragover',e=>{e.preventDefault();CA.classList.add('dragover')});
+CA.addEventListener('dragleave',()=>CA.classList.remove('dragover'));
+CA.addEventListener('drop',e=>{
+  e.preventDefault();CA.classList.remove('dragover');
+  const file=e.dataTransfer?.files[0];if(!file)return;
+  if(!file.name.endsWith('.json')){toast('Arraste um arquivo .json gerado pelo botão Salvar');return}
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{const d=JSON.parse(ev.target.result);if(d.verts&&d.edges){loadGraph(d);toast('Grafo carregado: '+file.name)}else toast('JSON inválido')}
+    catch(err){toast('Erro ao ler arquivo: '+err.message)}
+  };
+  reader.readAsText(file);
+});
+
+// ══════════════════════════════════════════════════════
+//  CLEAR / MISC
+// ══════════════════════════════════════════════════════
+function confirmClear(){
+  if(verts.length===0){toast('Canvas já está vazio');return}
+  openConfirmModal(
+    'Limpar o canvas?',
+    'Todos os vértices e arestas serão removidos.<br>Você pode desfazer com <kbd style="background:var(--surface3);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:11px">Ctrl+Z</kbd>',
+    ()=>{ verts=[];edges=[];selected=null;multiSel=new Set();edgeStart=null;clearHighlights();saveHistory();renderAll();toast('Canvas limpo'); }
+  );
+}
+
+let toastTimer=null;
+function toast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2400);
+}
+function setStatus(msg){document.getElementById('statusbar').textContent=msg}
+
+// ══════════════════════════════════════════════════════
+//  CONFIRM MODAL
+// ══════════════════════════════════════════════════════
+let _confirmCb=null;
+function openConfirmModal(title,msg,cb){
+  _confirmCb=cb;
+  document.getElementById('confirm-title').textContent=title;
+  document.getElementById('confirm-msg').innerHTML=msg;
+  document.getElementById('confirm-modal-bg').classList.add('open');
+}
+function confirmOK(){
+  document.getElementById('confirm-modal-bg').classList.remove('open');
+  if(_confirmCb){_confirmCb();_confirmCb=null;}
+}
+function confirmCancel(){
+  document.getElementById('confirm-modal-bg').classList.remove('open');
+  _confirmCb=null;
+}
+
+// ══════════════════════════════════════════════════════
+//  HELP MODAL
+// ══════════════════════════════════════════════════════
+function openHelp(){
+  document.getElementById('help-modal-bg').classList.add('open');
+}
+function closeHelp(){
+  document.getElementById('help-modal-bg').classList.remove('open');
+}
+
+// ══════════════════════════════════════════════════════
+//  CONTADOR GLOBAL DE GRAFOS GERADOS
+//
+//  Usa Netlify Function em /api/counter (mesmo domínio = sem CORS)
+//  GET  /api/counter  → { count: N }   (lê o total)
+//  POST /api/counter  → { count: N }   (incrementa +1)
+//
+//  Conta em QUALQUER geração: Kn, Cn, Pn, Kmn, Bn, Wn, Qn,
+//  Complemento, Produto Cartesiano — todos os botões geradores.
+//  Também conta ao Copiar TikZ e ao baixar .tex.
+// ══════════════════════════════════════════════════════
+const API = '/api/counter';
+const LOCAL_KEY = 'grafos_gerados_local';
+
+function localCount(){ return parseInt(localStorage.getItem(LOCAL_KEY)||'0'); }
+function incLocal(){ const n=localCount()+1; localStorage.setItem(LOCAL_KEY,n); return n; }
+
+function fmtNum(n){ return Number(n).toLocaleString('pt-BR'); }
+
+function setCounterUI(global, local){
+  const el = document.getElementById('counter-display');
+  if(!el) return;
+  if(global !== null){
+    el.innerHTML =
+      `🌐 <strong>${fmtNum(global)}</strong> grafos gerados globalmente` +
+      (local > 0 ? ` &nbsp;·&nbsp; 💻 ${fmtNum(local)} neste dispositivo` : '');
+    el.title = 'Soma de todos os usuários do mundo que usaram a ferramenta';
+  } else {
+    el.innerHTML = local > 0
+      ? `💻 ${fmtNum(local)} grafos gerados neste dispositivo (servidor offline)`
+      : '📊 Gere um grafo para começar a contar!';
+  }
+}
+
+async function fetchCount(){
+  try{
+    const r = await fetch(API, { cache:'no-cache' });
+    if(!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    return d.count ?? null;
+  } catch(e){ return null; }
+}
+
+async function hitCount(){
+  try{
+    const r = await fetch(API, { method:'POST', cache:'no-cache' });
+    if(!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    return d.count ?? null;
+  } catch(e){ return null; }
+}
+
+// Chamado a cada grafo gerado ou exportado
+async function trackGeneration(){
+  const local = incLocal();
+  setCounterUI(null, local); // atualiza imediatamente com valor local
+  const global = await hitCount();
+  setCounterUI(global, local);
+}
+
+async function initCounter(){
+  const el = document.getElementById('counter-display');
+  if(!el) return;
+  el.textContent = '⏳ Carregando…';
+  const global = await fetchCount();
+  setCounterUI(global, localCount());
+}
+// ══════════════════════════════════════════════════════
+//  KEYBOARD
+// ══════════════════════════════════════════════════════
+document.addEventListener('keydown',e=>{
+
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
+  if(e.ctrlKey||e.metaKey){
+    if(e.key==='z'){e.preventDefault();undo();return}
+    if(e.key==='y'){e.preventDefault();redo();return}
+    if(e.key==='a'){e.preventDefault();verts.forEach(v=>multiSel.add(v.id));edges.forEach(e2=>multiSel.add(e2.id));setTool('multi');renderAll();return}
+    if(e.key==='l'){e.preventDefault();autoLayout();return}
+    return;
+  }
+  const map={s:'select',m:'multi',v:'vertex',a:'edge',l:'loop',d:'subdivide',x:'delete',f:'move'};
+  if(e.key==='F1'){e.preventDefault();setTool('move');return}
+  if(e.key==='F2'){e.preventDefault();setTool('select');return}
+  if(map[e.key])setTool(map[e.key]);
+  if(e.key==='g')toggleGrid();
+  if(e.key==='Escape'){edgeStart=null;multiSel.clear();selected=null;document.getElementById('temp-layer').innerHTML='';setStatus('Pronto.');renderAll()}
+  if(e.key==='Delete'||e.key==='Backspace'){
+    if(multiSel.size>0){deleteSelected();return}
+    if(!selected)return;
+    if(selected.type==='vertex'){edges=edges.filter(ed=>ed.from!==selected.id&&ed.to!==selected.id);verts=verts.filter(v=>v.id!==selected.id)}
+    else edges=edges.filter(ed=>ed.id!==selected.id);
+    selected=null;clearHighlights();saveHistory();renderAll();
+  }
+});
+
+// ══════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════
+window.addEventListener('resize',()=>{initVB();renderAll()});
+window.addEventListener('load',()=>{
+  initVB();
+  loadGraph(genCn(5));initCounter();
+  setTool('move');
+  setStatus('C₅ carregado · F=Mover S=Sel M=Multi V=Vértice A=Aresta L=Laço X=Del · Scroll=Zoom · Botão meio=Pan');
+});
+
+document.getElementById('modal').addEventListener('keydown',e=>{if(e.key==='Enter')confirmModal()});
+</script>
+
+<!-- CONFIRM MODAL -->
+<div id="confirm-modal-bg" class="modal-overlay" onclick="if(event.target===this)confirmCancel()">
+  <div style="background:var(--surface);border-radius:10px;padding:22px;min-width:280px;max-width:380px;box-shadow:var(--shadow);border:1px solid var(--border2)">
+    <h3 id="confirm-title" style="font-size:14px;font-weight:600;margin-bottom:8px;color:var(--text)"></h3>
+    <p id="confirm-msg" style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:16px"></p>
+    <div style="display:flex;justify-content:flex-end;gap:8px">
+      <button onclick="confirmCancel()" style="padding:6px 16px;border-radius:var(--rs);border:1px solid var(--border2);background:transparent;cursor:pointer;font-size:12px;font-family:var(--font-ui);color:var(--text)">Cancelar</button>
+      <button onclick="confirmOK()" style="padding:6px 16px;border-radius:var(--rs);border:1px solid var(--red-border);background:var(--red);cursor:pointer;font-size:12px;font-family:var(--font-ui);color:#fff;font-weight:500">Limpar</button>
+    </div>
+  </div>
+</div>
+
+<!-- HELP MODAL -->
+<div id="help-modal-bg" class="modal-overlay" onclick="if(event.target===this)closeHelp()">
+  <div style="background:var(--surface);border-radius:10px;padding:24px;width:min(560px,95vw);max-height:88vh;overflow-y:auto;box-shadow:var(--shadow);border:1px solid var(--border2);position:relative">
+    <button onclick="closeHelp()" style="position:absolute;top:14px;right:14px;background:none;border:none;cursor:pointer;font-size:16px;color:var(--text3)">✕</button>
+    <h2 style="font-size:16px;font-weight:700;margin-bottom:4px;color:var(--text)">📖 Ajuda — Gerador de Grafos em TikZ</h2>
+    <p style="font-size:11px;color:var(--text3);margin-bottom:16px;font-family:var(--font-mono)">Crie grafos visualmente e exporte código TikZ pronto para o Overleaf</p>
+
+    <div style="display:grid;gap:14px">
+
+      <div style="background:var(--surface2);border-radius:var(--r);padding:12px 14px">
+        <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">🛠 Ferramentas</div>
+        <div style="display:grid;gap:5px;font-size:12px">
+          <div><span style="font-family:var(--font-mono);background:var(--surface3);padding:1px 7px;border-radius:4px;margin-right:6px">⊙ Selecionar</span>Clique para selecionar um elemento. Arraste vértices para mover.</div>
+          <div><span style="font-family:var(--font-mono);background:var(--surface3);padding:1px 7px;border-radius:4px;margin-right:6px">⬚ Multi</span>Arraste para criar caixa de seleção. Selecione vários ao mesmo tempo.</div>
+          <div><span style="font-family:var(--font-mono);background:var(--surface3);padding:1px 7px;border-radius:4px;margin-right:6px">● Vértice</span>Clique em qualquer ponto do canvas para criar um vértice.</div>
+          <div><span style="font-family:var(--font-mono);background:var(--surface3);padding:1px 7px;border-radius:4px;margin-right:6px">— Aresta</span>Clique no vértice de origem, depois no destino. Clique no mesmo vértice duas vezes para criar laço.</div>
+          <div><span style="font-family:var(--font-mono);background:var(--surface3);padding:1px 7px;border-radius:4px;margin-right:6px">↺ Laço</span>Clique em um vértice para adicionar um laço (loop) nele.</div>
+          <div><span style="font-family:var(--font-mono);background:var(--surface3);padding:1px 7px;border-radius:4px;margin-right:6px">⊕ Subdivisão</span>Clique em uma aresta para inserir um novo vértice de grau 2 no meio.</div>
+          <div><span style="font-family:var(--font-mono);background:var(--surface3);padding:1px 7px;border-radius:4px;margin-right:6px">✕ Deletar</span>Clique em qualquer elemento para removê-lo.</div>
+        </div>
+      </div>
+
+      <div style="background:var(--surface2);border-radius:var(--r);padding:12px 14px">
+        <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">⚡ Geradores Automáticos</div>
+        <div style="display:grid;gap:5px;font-size:12px">
+          <div><b>K<sub>n</sub></b> — Grafo completo com n vértices (todos conectados entre si)</div>
+          <div><b>C<sub>n</sub></b> — Ciclo com n vértices</div>
+          <div><b>P<sub>n</sub></b> — Caminho com n vértices</div>
+          <div><b>K<sub>m,n</sub></b> — Grafo bipartido completo com partições de tamanho m e n</div>
+          <div><b>B<sub>n</sub></b> — Buquê de n círculos (1 vértice com n laços)</div>
+          <div><b>W<sub>n</sub></b> — Roda (Wheel) com n raios + hub central</div>
+          <div><b>Q<sub>n</sub></b> — Hipercubo n-dimensional (Q₁=K₂, Q₂=C₄, Q₃=cubo)</div>
+          <div><b>Ḡ Compl.</b> — Complemento do grafo atual (inverte as arestas)</div>
+          <div><b>□ Prod. Cart.</b> — Produto cartesiano G□G₂ com um segundo grafo escolhido</div>
+        </div>
+      </div>
+
+      <div style="background:var(--surface2);border-radius:var(--r);padding:12px 14px">
+        <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">🔬 Análise do Grafo</div>
+        <div style="font-size:12px;line-height:1.8;color:var(--text2)">
+          Clique em <b>🔬 Analisar</b> para calcular automaticamente:<br>
+          • <b>Vértices de corte</b> (destacados em vermelho tracejado no grafo)<br>
+          • <b>Pontes/bridges</b> (destacadas em laranja)<br>
+          • <b>Blocos biconexos</b> (cada bloco em uma cor diferente)<br>
+          • Grau máximo Δ, mínimo δ, médio, sequência de graus<br>
+          • Se é Euleriano, Semi-euleriano, Bipartido, Regular<br>
+          • Diâmetro, raio, número de componentes conexas<br>
+          Clique novamente em 🔬 Analisar para desativar e limpar os destaques.
+        </div>
+      </div>
+
+      <div style="background:var(--surface2);border-radius:var(--r);padding:12px 14px">
+        <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">🎨 Exportação TikZ</div>
+        <div style="font-size:12px;line-height:1.8;color:var(--text2)">
+          O painel direito gera código TikZ em tempo real.<br>
+          • <b>Escala TikZ</b>: controla o tamanho da figura no documento LaTeX<br>
+          • <b>Caption e Label</b>: preenchidos diretamente pelo app<br>
+          • <b>Posição</b>: H, h, t, b, p do float figure<br>
+          • <b>Estilo dos nós</b>: padrão, preenchido, branco, mínimo ou ponto<br>
+          • Cores customizadas são exportadas como <code>\definecolor</code><br>
+          • Botão <b>⬇ .tex</b> baixa o arquivo diretamente
+        </div>
+      </div>
+
+      <div style="background:var(--surface2);border-radius:var(--r);padding:12px 14px">
+        <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">⌨️ Atalhos de Teclado</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:11.5px">
+          <div><kbd style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 6px;font-family:var(--font-mono)">S</kbd> Selecionar</div>
+          <div><kbd style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 6px;font-family:var(--font-mono)">M</kbd> Multi-seleção</div>
+          <div><kbd style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 6px;font-family:var(--font-mono)">V</kbd> Vértice</div>
+          <div><kbd style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 6px;font-family:var(--font-mono)">A</kbd> Aresta</div>
+          <div><kbd style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 6px;font-family:var(--font-mono)">L</kbd> Laço</div>
+          <div><kbd style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 6px;font-family:var(--font-mono)">D</kbd> Subdivisão</div>
+          <div><kbd style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 6px;font-family:var(--font-mono)">X</kbd> Deletar</div>
+          <div><kbd style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 6px;font-family:var(--font-mono)">G</kbd> Grade</div>
+          <div><kbd style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 6px;font-family:var(--font-mono)">Esc</kbd> Desselecionar</div>
+          <div><kbd style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 6px;font-family:var(--font-mono)">Del</kbd> Remover seleção</div>
+          <div><kbd style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 6px;font-family:var(--font-mono)">Ctrl+Z</kbd> Desfazer</div>
+          <div><kbd style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 6px;font-family:var(--font-mono)">Ctrl+Y</kbd> Refazer</div>
+          <div><kbd style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 6px;font-family:var(--font-mono)">Ctrl+A</kbd> Sel. todos</div>
+          <div><kbd style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 6px;font-family:var(--font-mono)">Ctrl+L</kbd> Auto-layout</div>
+          <div><kbd style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 6px;font-family:var(--font-mono)">Scroll</kbd> Zoom</div>
+          <div><kbd style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 6px;font-family:var(--font-mono)">Ferramenta Mover</kbd> Pan canvas</div>
+        </div>
+      </div>
+
+      <div style="background:var(--surface2);border-radius:var(--r);padding:12px 14px">
+        <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">💾 Salvar e Carregar</div>
+        <div style="font-size:12px;line-height:1.8;color:var(--text2)">
+          • <b>💾 Salvar</b>: baixa um arquivo <code>.json</code> com todos os vértices e arestas<br>
+          • <b>📂 Carregar</b>: cole o conteúdo do <code>.json</code> salvo para restaurar o grafo<br>
+          • <b>Arrastar</b>: você também pode arrastar o arquivo <code>.json</code> direto para o canvas
+        </div>
+      </div>
+
+    </div>
+    <div style="text-align:center;margin-top:16px">
+      <button onclick="closeHelp()" style="padding:8px 28px;border-radius:var(--rs);border:1px solid var(--border2);background:var(--text);color:#fff;cursor:pointer;font-size:13px;font-family:var(--font-ui);font-weight:500">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- COUNTER BAR -->
+<div id="counter-bar" style="padding:4px 14px;background:var(--accent-bg);border-top:1px solid var(--accent-border);font-size:11px;color:var(--accent);text-align:center;font-family:var(--font-mono);flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap">
+  <span id="counter-display">⏳ Carregando…</span>
+</div>
+</body>
+</html>

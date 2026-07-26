@@ -1,0 +1,78 @@
+{
+  "verts": [
+    {
+      "id": "v001",
+      "x": 350,
+      "y": 140,
+      "label": "v_{1}",
+      "fillColor": "#eae8df",
+      "strokeColor": "#3a3830",
+      "radius": 20,
+      "opacity": 1
+    },
+    {
+      "id": "v002",
+      "x": 445,
+      "y": 305,
+      "label": "v_{2}",
+      "fillColor": "#eae8df",
+      "strokeColor": "#3a3830",
+      "radius": 20,
+      "opacity": 1
+    },
+    {
+      "id": "v003",
+      "x": 255,
+      "y": 305,
+      "label": "v_{3}",
+      "fillColor": "#eae8df",
+      "strokeColor": "#3a3830",
+      "radius": 20,
+      "opacity": 1
+    }
+  ],
+  "edges": [
+    {
+      "id": "ev001v002",
+      "from": "v001",
+      "to": "v002",
+      "label": "",
+      "curved": false,
+      "bend": 0,
+      "directed": false,
+      "dashed": false,
+      "color": "#49463e",
+      "isLoop": false,
+      "loopDir": 0,
+      "opacity": 1
+    },
+    {
+      "id": "ev001v003",
+      "from": "v001",
+      "to": "v003",
+      "label": "",
+      "curved": false,
+      "bend": 0,
+      "directed": false,
+      "dashed": false,
+      "color": "#49463e",
+      "isLoop": false,
+      "loopDir": 0,
+      "opacity": 1
+    },
+    {
+      "id": "ev002v003",
+      "from": "v002",
+      "to": "v003",
+      "label": "",
+      "curved": false,
+      "bend": 0,
+      "directed": false,
+      "dashed": false,
+      "color": "#49463e",
+      "isLoop": false,
+      "loopDir": 0,
+      "opacity": 1
+    }
+  ]
+}
