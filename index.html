@@ -1528,6 +1528,14 @@ function generateTikz(caption,labelStr){
   const scale=parseFloat(document.getElementById('tikz-scale').value)*0.01;
   const lines=[];
 
+  // Detect if we need extra libraries
+  const hasLoop=edges.some(e=>e.isLoop);
+  const hasBend=edges.some(e=>{
+    if(e.isLoop)return false;
+    const parallels=edges.filter(ed=>(ed.from===e.from&&ed.to===e.to)||(ed.from===e.to&&ed.to===e.from));
+    return parallels.length>1||e.curved;
+  });
+
   // Collect custom colors
   const colorDefs=new Map();
   verts.forEach(v=>{
@@ -1536,12 +1544,24 @@ function generateTikz(caption,labelStr){
   });
   edges.forEach(e=>{if(e.color&&e.color!=='#49463e'){const c=tikzColorDef(e.color);colorDefs.set(c.name,c.def)}});
 
+  // Preamble libraries — added as LaTeX comment at top of output
+  const libs=['arrows.meta'];
+  if(hasLoop)libs.push('loops');
+  lines.push(`% Preâmbulo necessário: \\usepackage{tikz} \\usetikzlibrary{${libs.join(',')}}`);
+
   lines.push(`\\begin{figure}[${pos}]`);
   lines.push('  \\centering');
   lines.push('  \\begin{tikzpicture}[');
   lines.push(`    every node/.style={${nstyle}},`);
-  lines.push('    every edge/.style={thick},');
-  lines.push('    >=stealth');
+  // Add bend and loop style globally
+  if(hasBend||hasLoop){
+    lines.push('    every edge/.style={thick},');
+    lines.push('    >=stealth,');
+    lines.push('    bend angle=30');
+  } else {
+    lines.push('    every edge/.style={thick},');
+    lines.push('    >=stealth');
+  }
   lines.push('  ]');
   if(colorDefs.size>0){lines.push('');colorDefs.forEach(def=>lines.push('    '+def))}
   lines.push('');
@@ -1562,23 +1582,45 @@ function generateTikz(caption,labelStr){
     const opts=[];
     if(e.directed)opts.push('->');
     if(e.dashed)opts.push('dashed');
-    if(e.color&&e.color!=='#49463e')opts.push(tikzColorDef(e.color).name);
-    if(e.opacity&&e.opacity!==1)opts.push(`opacity=${e.opacity.toFixed(2)}`);
+    if(e.color&&e.color!=='#49463e')opts.push(`draw=${tikzColorDef(e.color).name}`);
+    if(e.opacity&&e.opacity!==1)opts.push(`draw opacity=${e.opacity.toFixed(2)}`);
+    if(e.thickness)opts.push(`line width=${e.thickness}pt`);
 
     if(e.isLoop){
+      // FIX: correct TikZ loop syntax using \path + edge with loop
+      // out/in angles are absolute, looseness controls the loop size
       const deg=Math.round(e.loopDir||0);
-      opts.push(`loop, out=${(deg+50+360)%360}, in=${(deg-50+360)%360}, min distance=15mm, looseness=7`);
-      const lbl=e.label?`node[midway, auto, font=\\small] {$${e.label}$} `:'';
-      lines.push(`    \\path (${e.from}) edge[${opts.join(', ')}] ${lbl}(${e.from});`);
+      const outAng=(deg+45+360)%360;
+      const inAng=(deg-45+360)%360;
+      opts.push(`loop`);
+      opts.push(`out=${outAng}`);
+      opts.push(`in=${inAng}`);
+      opts.push(`min distance=12mm`);
+      opts.push(`looseness=6`);
+      const lbl=e.label?`, node[midway, auto, font=\\small] {$${e.label}$}`:'';
+      lines.push(`    \\path (${e.from}) edge[${opts.join(', ')}${lbl}] (${e.from});`);
     } else {
+      // FIX: use 'to' instead of '--' for bent/curved edges
       const parallels=edges.filter(ed=>(ed.from===e.from&&ed.to===e.to)||(ed.from===e.to&&ed.to===e.from));
-      const idx=parallels.findIndex(ed=>ed.id===e.id);const count=parallels.length;
+      const idx=parallels.findIndex(ed=>ed.id===e.id);
+      const count=parallels.length;
       let bv=e.bend||0;
-      if(count>1)bv=Math.round((idx-(count-1)/2)*28);else if(e.curved)bv=e.bend||22;
-      if(bv>0)opts.push(`bend left=${Math.abs(bv)}`);else if(bv<0)opts.push(`bend right=${Math.abs(bv)}`);
-      const optStr=opts.length?`[${opts.join(', ')}]`:'';
+      if(count>1){
+        // Spread parallel edges symmetrically
+        bv=Math.round((idx-(count-1)/2)*30);
+      } else if(e.curved){
+        bv=e.bend||22;
+      }
+      if(bv>0)opts.push(`bend left=${Math.abs(bv)}`);
+      else if(bv<0)opts.push(`bend right=${Math.abs(bv)}`);
+
       const lbl=e.label?`node[midway, above, font=\\small] {$${e.label}$} `:'';
-      lines.push(`    \\draw${optStr} (${e.from}) -- ${lbl}(${e.to});`);
+      if(opts.length>0){
+        // FIX: use \path edge[] for curved/parallel, \draw -- for straight
+        lines.push(`    \\path (${e.from}) edge[${opts.join(', ')}] ${lbl}(${e.to});`);
+      } else {
+        lines.push(`    \\draw (${e.from}) -- ${lbl}(${e.to});`);
+      }
     }
   }
   lines.push('  \\end{tikzpicture}');

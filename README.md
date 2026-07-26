@@ -85,6 +85,8 @@ A ferramenta reduziu esse tempo para **menos de 1 minuto** por figura.
 | Análise: pontes e cortes | ![demo-analysis](docs/assets/demo-analysis.gif) |
 | Subdivisão de arestas | ![demo-subdivide](docs/assets/demo-subdivide.gif) |
 
+> 📸 *GIFs serão adicionados em breve. [Veja o site ao vivo →](https://grafoslatex.netlify.app)*
+
 ---
 
 ## ✨ Funcionalidades
@@ -160,6 +162,8 @@ Clique em **Analisar** para calcular e destacar visualmente:
 | Contador | Netlify Functions + counterapi.dev | Sem banco de dados, sem backend próprio |
 | Analytics | Google Analytics 4 | Métricas de uso (configurável) |
 | Fontes | Google Fonts (Inter + JetBrains Mono) | UX profissional |
+
+> ⚠️ **Compatibilidade:** a ferramenta é otimizada para uso em **desktop** (teclado + mouse). Em dispositivos móveis a experiência é limitada.
 
 **Por que sem framework?**
 
@@ -375,7 +379,7 @@ git push origin feature/exportacao-graphml
 
 - 🌐 **Tradução** para inglês e espanhol
 - 🧪 **Testes** (atualmente sem cobertura automatizada)
-- 📱 **Mobile** — melhorar UX em telas pequenas
+- 📱 **Mobile** — a ferramenta é otimizada para desktop; contribuições para adaptar a telas pequenas são bem-vindas
 - ♿ **Acessibilidade** — navegação por teclado e leitores de tela
 - 📖 **Documentação** — exemplos, tutoriais, vídeos
 

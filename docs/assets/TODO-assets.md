@@ -1,5 +1,7 @@
 # Assets Pendentes — Screenshots e GIFs
 
+> **Nota:** não incluir screenshot mobile — a ferramenta é otimizada para desktop.
+
 Este arquivo lista todos os assets visuais que você precisa capturar antes de tornar o repositório público.
 
 ---
@@ -14,7 +16,6 @@ Salve em `docs/assets/` com os nomes exatos abaixo.
 | `screenshot-main.png` | Interface completa com grafo razoável | Use K₄ ou W₅ |
 | `screenshot-analysis.png` | Painel 🔬 Analisar ativo com destaques | Use grafo com ponte |
 | `screenshot-tikz.png` | Painel TikZ com código visível | Zoom no painel direito |
-| `screenshot-mobile.png` | Interface em tela estreita | DevTools → 375px |
 | `screenshot-help.png` | Modal de Ajuda aberto | Clique em "? Ajuda" |
 | `screenshot-bipartite.png` | K₃,₃ gerado e analisado | Kₘ,ₙ com m=3, n=3 |
 
