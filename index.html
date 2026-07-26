@@ -1673,20 +1673,23 @@ function closeHelp(){
 // ══════════════════════════════════════════════════════
 //  CONTADOR GLOBAL DE GRAFOS GERADOS
 //
-//  Usa Netlify Function em /api/counter (mesmo domínio = sem CORS)
-//  GET  /api/counter  → { count: N }   (lê o total)
-//  POST /api/counter  → { count: N }   (incrementa +1)
+//  Usa Supabase (PostgreSQL na nuvem) via API REST pública.
+//  Sem CORS, sem Netlify Function, funciona em qualquer host.
 //
-//  Conta em QUALQUER geração: Kn, Cn, Pn, Kmn, Bn, Wn, Qn,
-//  Complemento, Produto Cartesiano — todos os botões geradores.
-//  Também conta ao Copiar TikZ e ao baixar .tex.
+//  Tabela: counters | Linha: { id: 'grafos', count: N }
+//  GET  → lê o valor atual
+//  POST → incrementa via rpc (função SQL atômica)
 // ══════════════════════════════════════════════════════
-const API = '/api/counter';
+// ⚙️ CONFIGURAÇÃO DO CONTADOR GLOBAL
+// Crie um projeto gratuito em supabase.com e substitua os valores abaixo.
+// Veja docs/deploy.md para o passo a passo completo.
+const SB_URL  = 'https://SEU-PROJETO.supabase.co';       // Project URL
+const SB_KEY  = 'SUA-CHAVE-ANON-PUBLICA';                // anon/public key
+const SB_HDR  = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' };
 const LOCAL_KEY = 'grafos_gerados_local';
 
 function localCount(){ return parseInt(localStorage.getItem(LOCAL_KEY)||'0'); }
 function incLocal(){ const n=localCount()+1; localStorage.setItem(LOCAL_KEY,n); return n; }
-
 function fmtNum(n){ return Number(n).toLocaleString('pt-BR'); }
 
 function setCounterUI(global, local){
@@ -1699,33 +1702,39 @@ function setCounterUI(global, local){
     el.title = 'Soma de todos os usuários do mundo que usaram a ferramenta';
   } else {
     el.innerHTML = local > 0
-      ? `💻 ${fmtNum(local)} grafos gerados neste dispositivo (servidor offline)`
+      ? `💻 ${fmtNum(local)} grafos gerados neste dispositivo`
       : '📊 Gere um grafo para começar a contar!';
   }
 }
 
 async function fetchCount(){
   try{
-    const r = await fetch(API, { cache:'no-cache' });
+    const r = await fetch(
+      `${SB_URL}/rest/v1/counters?id=eq.grafos&select=count`,
+      { headers: SB_HDR, cache: 'no-cache' }
+    );
     if(!r.ok) throw new Error(r.status);
     const d = await r.json();
-    return d.count ?? null;
-  } catch(e){ return null; }
+    return d[0]?.count ?? null;
+  } catch(e){ console.warn('fetchCount:', e.message); return null; }
 }
 
 async function hitCount(){
   try{
-    const r = await fetch(API, { method:'POST', cache:'no-cache' });
+    const r = await fetch(
+      `${SB_URL}/rest/v1/rpc/increment_counter`,
+      { method: 'POST', headers: SB_HDR, cache: 'no-cache',
+        body: JSON.stringify({ row_id: 'grafos' }) }
+    );
     if(!r.ok) throw new Error(r.status);
     const d = await r.json();
-    return d.count ?? null;
-  } catch(e){ return null; }
+    return typeof d === 'number' ? d : (d?.count ?? null);
+  } catch(e){ console.warn('hitCount:', e.message); return null; }
 }
 
-// Chamado a cada grafo gerado ou exportado
 async function trackGeneration(){
   const local = incLocal();
-  setCounterUI(null, local); // atualiza imediatamente com valor local
+  setCounterUI(null, local);
   const global = await hitCount();
   setCounterUI(global, local);
 }

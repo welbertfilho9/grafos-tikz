@@ -104,3 +104,62 @@ O `netlify.toml` já está configurado corretamente:
   to     = "/.netlify/functions/counter"
   status = 200
 ```
+
+---
+
+## Configurando o contador global (Supabase)
+
+O contador global usa o [Supabase](https://supabase.com) como banco de dados. É gratuito e não precisa de servidor.
+
+### Passo 1 — Criar conta e projeto
+
+1. Acesse [supabase.com](https://supabase.com) → crie conta gratuita
+2. Clique em **New Project** → dê um nome → crie
+3. Aguarde o projeto inicializar (~2 minutos)
+
+### Passo 2 — Criar a tabela e função
+
+No painel do Supabase, vá em **SQL Editor** e rode:
+
+```sql
+CREATE TABLE counters (
+  id    TEXT PRIMARY KEY,
+  count BIGINT NOT NULL DEFAULT 0
+);
+
+INSERT INTO counters (id, count) VALUES ('grafos', 0);
+
+CREATE OR REPLACE FUNCTION increment_counter(row_id TEXT)
+RETURNS BIGINT AS $$
+  UPDATE counters SET count = count + 1 WHERE id = row_id RETURNING count;
+$$ LANGUAGE SQL;
+
+GRANT SELECT, UPDATE ON counters TO anon;
+GRANT EXECUTE ON FUNCTION increment_counter(TEXT) TO anon;
+```
+
+### Passo 3 — Habilitar acesso público (RLS)
+
+Em **Table Editor → counters → RLS → Enable RLS**, crie duas policies:
+
+- **SELECT:** name=`Allow public read`, using=`true`
+- **UPDATE:** name=`Allow public update`, using=`true`
+
+### Passo 4 — Pegar suas credenciais
+
+Em **Project Settings → API**:
+- Copie a **Project URL**
+- Copie a chave **anon / public**
+
+### Passo 5 — Atualizar o index.html
+
+Abra `index.html` e substitua as linhas:
+
+```javascript
+const SB_URL  = 'https://SEU-PROJETO.supabase.co';
+const SB_KEY  = 'SUA-CHAVE-ANON-PUBLICA';
+```
+
+Pelos valores reais do seu projeto.
+
+> **Nota:** a chave `anon` é pública por design — pode ficar no código. Nunca use a chave `service_role` no frontend.
