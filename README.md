@@ -11,7 +11,7 @@
 [![HTML](https://img.shields.io/badge/built%20with-HTML%20%2B%20JS%20puro-f5a623?style=flat-square&logo=html5)](index.html)
 [![LaTeX](https://img.shields.io/badge/exporta-TikZ%20%2F%20LaTeX-008080?style=flat-square&logo=latex)](index.html)
 [![Deploy](https://img.shields.io/badge/deploy-Netlify-00C7B7?style=flat-square&logo=netlify)](https://grafoslatex.netlify.app)
-[![Grafos Gerados](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgrafoslatex.netlify.app%2Fapi%2Fcounter&query=%24.count&label=grafos%20gerados&color=3b33b0&style=flat-square&logo=latex&cacheSeconds=3600)](https://grafoslatex.netlify.app)
+![Grafos Gerados](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fuxvkarqvopgqslokvjdo.supabase.co%2Frest%2Fv1%2Fcounters%3Fselect%3Dcount%26limit%3D1%26apikey%3Dsb_publishable_cgiQTvUefjlVmtTkj6mLlw_Dzbq0Xan&query=%24%5B0%5D.count&label=Grafos%20Gerados&color=blue)
 [![Status](https://img.shields.io/website?url=https%3A%2F%2Fgrafoslatex.netlify.app&style=flat-square&label=site)](https://grafoslatex.netlify.app)
 [![UFABC](https://img.shields.io/badge/origem-UFABC-003366?style=flat-square)](https://www.ufabc.edu.br)
 
